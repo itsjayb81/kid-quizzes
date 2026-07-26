@@ -1,0 +1,1141 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<title>Pole Position — sample maths quiz</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<style>
+  :root {
+    --night: #15151E;        /* F1 carbon */
+    --panel: #22222E;
+    --panel-deep: #1A1A24;
+    --cream: #F4F4F8;
+    --cream-dim: #9B9BAD;
+    --gold: #E10600;         /* official F1 red */
+    --gold-deep: #A00400;
+    --purple: #B14EFF;       /* fastest sector */
+    --red: #E5383B;
+    --green: #00D26A;        /* personal best */
+    --amber: #FFB020;
+    --radius: 18px;
+    --display: ui-rounded, "Segoe UI", "Trebuchet MS", Verdana, sans-serif;
+  }
+  html, body { margin: 0; padding: 0; }
+  body {
+    background: var(--night);
+    color: var(--cream);
+    font-family: var(--display);
+    min-height: 100vh;
+    -webkit-tap-highlight-color: transparent;
+  }
+  * { box-sizing: border-box; user-select: none; }
+
+  .wrap {
+    max-width: 480px;
+    margin: 0 auto;
+    padding: 16px 16px 32px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    min-height: 100vh;
+  }
+
+  .screen { display: none; flex-direction: column; gap: 14px; flex: 1; }
+  .screen.on { display: flex; }
+
+  /* ---------- shared bits ---------- */
+  .big-btn {
+    font-family: var(--display);
+    font-weight: 800;
+    font-size: 1.35rem;
+    border: none;
+    border-radius: var(--radius);
+    padding: 20px 24px;
+    background: var(--gold);
+    color: #FFF;
+    cursor: pointer;
+    box-shadow: 0 5px 0 var(--gold-deep);
+    transition: transform .08s ease;
+  }
+  .big-btn:active { transform: translateY(4px); box-shadow: 0 1px 0 var(--gold-deep); }
+  .ghost-btn {
+    background: none;
+    border: 2px solid #3A3A4C;
+    color: var(--cream-dim);
+    border-radius: 12px;
+    padding: 10px 16px;
+    font-family: var(--display);
+    font-weight: 700;
+    font-size: .95rem;
+    cursor: pointer;
+  }
+  .card {
+    background: var(--panel);
+    border-radius: var(--radius);
+    padding: 18px;
+  }
+  .eyebrow {
+    font-size: .72rem;
+    font-weight: 800;
+    letter-spacing: .14em;
+    text-transform: uppercase;
+    color: var(--gold);
+  }
+
+  /* ---------- start screen ---------- */
+  .hero { text-align: center; padding-top: 12px; }
+  .target-logo { width: 108px; height: 108px; margin: 0 auto 8px; display: block; }
+  h1 {
+    font-size: 2rem;
+    font-weight: 900;
+    margin: 6px 0 2px;
+    letter-spacing: -.01em;
+    text-wrap: balance;
+  }
+  .sub { color: var(--cream-dim); margin: 0; font-size: 1rem; }
+  .stage-banner {
+    background: var(--panel);
+    border: 2px solid var(--gold);
+    border-radius: var(--radius);
+    padding: 12px 16px;
+    text-align: center;
+    font-size: .95rem;
+    line-height: 1.45;
+  }
+  .stage-banner .eyebrow { display: block; margin-bottom: 2px; }
+  .stat-row { display: flex; gap: 10px; }
+  .stat {
+    flex: 1;
+    background: var(--panel);
+    border-radius: var(--radius);
+    padding: 14px 10px;
+    text-align: center;
+  }
+  .stat .num {
+    font-size: 1.7rem;
+    font-weight: 900;
+    color: var(--gold);
+    font-variant-numeric: tabular-nums;
+  }
+  .stat .lbl { font-size: .72rem; color: var(--cream-dim); font-weight: 700; letter-spacing: .06em; text-transform: uppercase; }
+  .last-night { font-size: .95rem; color: var(--cream-dim); text-align: center; min-height: 1.2em; }
+  .last-night b { color: var(--cream); }
+  .sync-chip { text-align: center; font-size: .8rem; font-weight: 700; color: var(--cream-dim); min-height: 1.2em; }
+  .sync-chip.cloud { color: var(--green); }
+  .btn-pair { display: flex; gap: 10px; }
+  .btn-pair .ghost-btn { flex: 1; }
+
+  /* ---------- quiz screen ---------- */
+  .topbar { display: flex; align-items: center; gap: 12px; }
+  .timer-pill {
+    background: var(--panel);
+    border-radius: 999px;
+    padding: 8px 14px;
+    font-weight: 800;
+    font-variant-numeric: tabular-nums;
+    font-size: 1rem;
+    min-width: 82px;
+    text-align: center;
+  }
+  .timer-pill.low { color: var(--gold); }
+  .track {
+    flex: 1;
+    height: 12px;
+    background: var(--panel);
+    border-radius: 999px;
+    position: relative;
+  }
+  .track .fill {
+    height: 100%;
+    width: 0%;
+    background: var(--gold);
+    border-radius: 999px;
+    transition: width 1s linear;
+  }
+  .track .car {
+    position: absolute;
+    top: 50%;
+    left: 0%;
+    transform: translate(-50%, -55%);
+    font-size: 20px;
+    line-height: 1;
+    transition: left 1s linear;
+    pointer-events: none;
+  }
+  .track .flag {
+    position: absolute;
+    top: 50%;
+    right: -4px;
+    transform: translateY(-60%);
+    font-size: 14px;
+    line-height: 1;
+    pointer-events: none;
+  }
+  .streak-pill {
+    background: var(--panel);
+    border-radius: 999px;
+    padding: 8px 14px;
+    font-weight: 800;
+    font-size: 1rem;
+    min-width: 60px;
+    text-align: center;
+  }
+  .streak-pill.hot { background: #3A1250; color: var(--purple); }
+
+  .q-card {
+    background: var(--panel);
+    border-radius: var(--radius);
+    padding: 22px 18px;
+    text-align: center;
+    position: relative;
+    min-height: 150px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 8px;
+  }
+  .q-cat { font-size: .72rem; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; color: var(--cream-dim); }
+  .q-text {
+    font-size: 1.9rem;
+    font-weight: 900;
+    line-height: 1.25;
+    text-wrap: balance;
+  }
+  .q-text.small { font-size: 1.25rem; font-weight: 700; line-height: 1.45; }
+  .answer-line {
+    font-size: 2rem;
+    font-weight: 900;
+    color: var(--gold);
+    min-height: 1.3em;
+    font-variant-numeric: tabular-nums;
+    border-bottom: 3px dashed #3A3A4C;
+    display: inline-block;
+    min-width: 110px;
+    margin: 0 auto;
+  }
+  .q-card.right { animation: pop .45s ease; outline: 3px solid var(--green); }
+  .q-card.wrong { animation: shake .4s ease; outline: 3px solid var(--red); }
+  @keyframes pop { 0% { transform: scale(1); } 40% { transform: scale(1.04); } 100% { transform: scale(1); } }
+  @keyframes shake {
+    0%,100% { transform: translateX(0); }
+    25% { transform: translateX(-8px); }
+    75% { transform: translateX(8px); }
+  }
+  .feedback {
+    font-weight: 900;
+    font-size: 1.1rem;
+    min-height: 1.4em;
+  }
+  .feedback.good { color: var(--green); }
+  .feedback.bad { color: var(--red); }
+
+  .pad {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+  }
+  .pad button {
+    font-family: var(--display);
+    font-size: 1.6rem;
+    font-weight: 800;
+    padding: 16px 0;
+    border: none;
+    border-radius: 14px;
+    background: var(--panel-deep);
+    color: var(--cream);
+    cursor: pointer;
+    box-shadow: 0 4px 0 #0D0D14;
+  }
+  .pad button:active { transform: translateY(3px); box-shadow: 0 1px 0 #0D0D14; }
+  .pad button.go { background: var(--gold); color: #FFF; box-shadow: 0 4px 0 var(--gold-deep); }
+  .pad button.del { color: var(--cream-dim); font-size: 1.3rem; }
+  .pad button.neg { color: var(--amber); font-size: 1.4rem; }
+
+  .choices { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .choices button {
+    font-family: var(--display);
+    font-size: 1.5rem;
+    font-weight: 800;
+    padding: 22px 8px;
+    border: none;
+    border-radius: 14px;
+    background: var(--panel-deep);
+    color: var(--cream);
+    cursor: pointer;
+    box-shadow: 0 4px 0 #0D0D14;
+  }
+  .choices button:active { transform: translateY(3px); box-shadow: 0 1px 0 #0D0D14; }
+
+  .quiz-foot { display: flex; justify-content: space-between; align-items: center; }
+  .score-live { font-weight: 900; font-size: 1.1rem; color: var(--gold); font-variant-numeric: tabular-nums; }
+
+  /* ---------- race engineer tip ---------- */
+  .weapon-card {
+    background: var(--panel);
+    border: 3px solid var(--purple);
+    border-radius: var(--radius);
+    padding: 24px 20px;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin: auto 0;
+  }
+  .weapon-card .w-icon { font-size: 3rem; line-height: 1; }
+  .weapon-card .eyebrow { color: var(--purple); }
+  .weapon-card h2 { margin: 0; font-size: 1.5rem; font-weight: 900; }
+  .weapon-card p { margin: 0; font-size: 1.1rem; line-height: 1.55; color: var(--cream); }
+  .book-list { display: flex; flex-direction: column; gap: 10px; }
+  .book-item { background: var(--panel); border-radius: 14px; padding: 14px 16px; text-align: left; }
+  .book-item h3 { margin: 0 0 4px; font-size: 1.05rem; font-weight: 900; color: var(--purple); }
+  .book-item p { margin: 0; font-size: .95rem; line-height: 1.5; color: var(--cream); }
+  .book-item .w-cat { font-size: .7rem; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; color: var(--cream-dim); }
+
+  /* ---------- report screen ---------- */
+  .report-hero { text-align: center; padding-top: 10px; }
+  .report-hero .big-score {
+    font-size: 3.2rem;
+    font-weight: 900;
+    color: var(--gold);
+    line-height: 1;
+    font-variant-numeric: tabular-nums;
+  }
+  .report-hero .headline { font-size: 1.3rem; font-weight: 900; margin-top: 6px; }
+  .cat-list { display: flex; flex-direction: column; gap: 8px; }
+  .cat-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: var(--panel-deep);
+    border-radius: 12px;
+    padding: 10px 12px;
+  }
+  .cat-row .name { flex: 1; font-weight: 700; font-size: .95rem; }
+  .cat-row .bar {
+    flex: 1.2;
+    height: 10px;
+    background: #0D0D14;
+    border-radius: 999px;
+    overflow: hidden;
+  }
+  .cat-row .bar i { display: block; height: 100%; background: var(--green); border-radius: 999px; }
+  .cat-row .pct { width: 44px; text-align: right; font-weight: 800; font-variant-numeric: tabular-nums; font-size: .9rem; }
+  .note { color: var(--cream-dim); font-size: .9rem; text-align: center; margin: 0; }
+  .legend { font-size: .72rem; color: var(--cream-dim); text-align: center; margin: 8px 0 0; }
+  .legend b { font-weight: 800; }
+
+  @media (prefers-reduced-motion: reduce) {
+    .q-card.right, .q-card.wrong { animation: none; }
+    .track .fill { transition: none; }
+  }
+  button:focus-visible { outline: 3px solid var(--cream); outline-offset: 2px; }
+</style>
+
+<div class="wrap">
+
+  <!-- ============ START ============ -->
+  <div class="screen on" id="scr-start">
+    <div class="hero">
+      <svg class="target-logo" viewBox="0 0 120 120" aria-hidden="true">
+        <!-- speed lines -->
+        <line x1="2" y1="48" x2="26" y2="48" stroke="#E10600" stroke-width="5" stroke-linecap="round"/>
+        <line x1="8" y1="60" x2="30" y2="60" stroke="#B14EFF" stroke-width="5" stroke-linecap="round"/>
+        <line x1="2" y1="72" x2="26" y2="72" stroke="#E10600" stroke-width="5" stroke-linecap="round"/>
+        <!-- F1 car side profile -->
+        <path d="M34 72 L44 72 L50 62 L74 62 L80 72 L104 72 L104 78 L34 78 Z" fill="#E10600"/>
+        <path d="M52 62 L58 52 L70 52 L74 62 Z" fill="#22222E"/>
+        <rect x="30" y="64" width="12" height="4" rx="2" fill="#F4F4F8"/>
+        <rect x="98" y="56" width="16" height="4" rx="2" fill="#F4F4F8"/>
+        <circle cx="48" cy="80" r="9" fill="#15151E" stroke="#F4F4F8" stroke-width="2.5"/>
+        <circle cx="92" cy="80" r="9" fill="#15151E" stroke="#F4F4F8" stroke-width="2.5"/>
+        <!-- chequered strip -->
+        <rect x="34" y="26" width="8" height="8" fill="#F4F4F8"/>
+        <rect x="42" y="34" width="8" height="8" fill="#F4F4F8"/>
+        <rect x="50" y="26" width="8" height="8" fill="#F4F4F8"/>
+        <rect x="58" y="34" width="8" height="8" fill="#F4F4F8"/>
+        <rect x="66" y="26" width="8" height="8" fill="#F4F4F8"/>
+        <rect x="74" y="34" width="8" height="8" fill="#F4F4F8"/>
+      </svg>
+      <div class="eyebrow">Ten minutes a night &middot; 4 stints</div>
+      <h1>Alex&rsquo;s Pole Position</h1>
+      <p class="sub">Hit the apex. Nail the numbers. Beat your best lap.</p>
+    </div>
+
+    <div class="stage-banner" id="stage-banner"></div>
+
+    <div class="stat-row">
+      <div class="stat"><div class="num" id="st-days">0</div><div class="lbl">Night streak</div></div>
+      <div class="stat"><div class="num" id="st-level">1</div><div class="lbl" id="st-level-lbl">Rookie</div></div>
+      <div class="stat"><div class="num" id="st-best">0</div><div class="lbl">Best points</div></div>
+    </div>
+
+    <div class="last-night" id="last-night"></div>
+    <div class="sync-chip" id="sync-chip"></div>
+
+    <button class="big-btn" id="btn-start">LIGHTS OUT &mdash; START THE RACE &#127937;</button>
+    <div class="btn-pair">
+      <button class="ghost-btn" id="btn-book">&#128202; Telemetry (0)</button>
+      <button class="ghost-btn" id="btn-sound">Sound: ON</button>
+    </div>
+  </div>
+
+  <!-- ============ QUIZ ============ -->
+  <div class="screen" id="scr-quiz">
+    <div class="topbar">
+      <div class="timer-pill" id="timer">STINT 1 &middot; 10:00</div>
+      <div class="track"><div class="fill" id="time-fill"></div><div class="car" id="car">&#127950;&#65039;</div><div class="flag">&#127937;</div></div>
+      <div class="streak-pill" id="streak">&#127950;&#65039; 0</div>
+    </div>
+
+    <div class="q-card" id="q-card">
+      <div class="q-cat" id="q-cat">ALGEBRA</div>
+      <div class="q-text" id="q-text">2x + 3 = 11</div>
+      <div class="answer-line" id="a-line">&nbsp;</div>
+      <div class="feedback" id="feedback">&nbsp;</div>
+    </div>
+
+    <div class="pad" id="pad">
+      <button data-k="1">1</button><button data-k="2">2</button><button data-k="3">3</button>
+      <button data-k="4">4</button><button data-k="5">5</button><button data-k="6">6</button>
+      <button data-k="7">7</button><button data-k="8">8</button><button data-k="9">9</button>
+      <button data-k="neg" class="neg">&minus;</button><button data-k="0">0</button><button data-k="back" class="del">&#9003;</button>
+      <button data-k="." class="del" style="grid-column: 1 / 2;">&middot;</button>
+      <button data-k="go" class="go" style="grid-column: 2 / -1;">CHECK &#10148;</button>
+    </div>
+
+    <div class="choices" id="choices" style="display:none;"></div>
+
+    <div class="quiz-foot">
+      <button class="ghost-btn" id="btn-end">Box early</button>
+      <div class="score-live" id="score-live">0 pts</div>
+    </div>
+  </div>
+
+  <!-- ============ RACE ENGINEER TIP ============ -->
+  <div class="screen" id="scr-weapon">
+    <div class="weapon-card">
+      <div class="w-icon">&#128266;</div>
+      <div class="eyebrow">Radio message &middot; race engineer &middot; clock stopped</div>
+      <h2 id="w-title">Two Minuses Make a Plus</h2>
+      <p id="w-body"></p>
+      <button class="big-btn" id="btn-w-back">COPY THAT &mdash; BACK OUT THERE</button>
+    </div>
+  </div>
+
+  <!-- ============ TELEMETRY ============ -->
+  <div class="screen" id="scr-book">
+    <div class="hero" style="padding-top:4px;">
+      <div class="eyebrow">Race engineer&rsquo;s notes</div>
+      <h1 style="font-size:1.5rem;">Telemetry</h1>
+    </div>
+    <div class="book-list" id="book-list"></div>
+    <button class="big-btn" id="btn-book-back">BACK</button>
+  </div>
+
+  <!-- ============ REPORT ============ -->
+  <div class="screen" id="scr-report">
+    <div class="report-hero">
+      <div class="eyebrow">Chequered flag</div>
+      <div class="big-score" id="r-score">0</div>
+      <div class="headline" id="r-headline">Good race!</div>
+    </div>
+
+    <div class="stat-row">
+      <div class="stat"><div class="num" id="r-hit">0/0</div><div class="lbl">Clean laps</div></div>
+      <div class="stat"><div class="num" id="r-acc">0%</div><div class="lbl">Accuracy</div></div>
+      <div class="stat"><div class="num" id="r-streakbest">0</div><div class="lbl">Best streak</div></div>
+    </div>
+
+    <div class="card">
+      <div class="eyebrow" style="margin-bottom:10px;">Sector times &mdash; show Mum or Dad</div>
+      <div class="cat-list" id="r-cats"></div>
+      <p class="legend"><b style="color:var(--purple);">&#9632; purple</b> = flying &middot; <b style="color:var(--green);">&#9632; green</b> = solid &middot; <b style="color:var(--amber);">&#9632; yellow</b> = needs work</p>
+    </div>
+
+    <div class="card" id="r-coach" style="font-size:1rem; line-height:1.5;"></div>
+    <div class="sync-chip" id="r-sync"></div>
+
+    <button class="big-btn" id="btn-again">PARC FERM&Eacute; &#127942;</button>
+    <p class="note">Same time tomorrow keeps the night streak alive.</p>
+  </div>
+
+</div>
+
+<script>
+(function () {
+  'use strict';
+
+  /* ================= helpers ================= */
+  const $ = id => document.getElementById(id);
+  const ri = (a, b) => a + Math.floor(Math.random() * (b - a + 1)); // inclusive
+  const pick = arr => arr[Math.floor(Math.random() * arr.length)];
+  const shuffle = arr => { const a = arr.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+  const sgn = n => (n < 0 ? '(' + n + ')' : String(n));   // wrap negatives for readability
+  const gcd = (a, b) => b ? gcd(b, a % b) : Math.abs(a);
+  // builds a multiple-choice set that always contains the right answer and never repeats itself
+  const choiceSet = (right, wrongs, n) => {
+    const out = [right];
+    for (const w of wrongs) { if (out.length >= (n || 4)) break; if (!out.includes(w)) out.push(w); }
+    return shuffle(out);
+  };
+
+  /* ================= progress + backup =================
+     This is a plain web page, so it opens on any phone with no Google account
+     and no sign-in. The phone itself is the source of truth — the quiz ALWAYS
+     plays, even with no signal at all.
+
+     If BACKEND is filled in, we additionally:
+       · pull shared progress on load (JSONP — works from any domain)
+       · push progress + the night's result after each race (fire and forget)
+     If the backend is slow, blocked or down, nothing breaks. */
+  const KID = 'demo';
+  const BACKEND = '';   // DEMO: deliberately empty. No cloud, no shared progress —
+                        // a stranger playing this can never touch a real kid's data.
+
+  const hasCloud = !!BACKEND;
+
+  const FRESH = () => ({ levels: {}, days: {}, best: 0, history: [], weapons: [] });
+  let S = FRESH();
+
+  function localLoad() {
+    try {
+      const raw = localStorage.getItem('demo-state-v2');
+      if (raw) return Object.assign(FRESH(), JSON.parse(raw));
+    } catch (e) {}
+    return FRESH();
+  }
+  function localSave() {
+    try { localStorage.setItem('demo-state-v2', JSON.stringify(S)); } catch (e) {}
+  }
+
+  function setSync(el, msg, good) {
+    const n = $(el); if (!n) return;
+    n.textContent = msg;
+    n.className = 'sync-chip' + (good ? ' cloud' : '');
+  }
+
+  // How much play a saved state represents — used to make sure a phone that
+  // played offline never gets wiped by an older copy from the backend.
+  function weight(st) {
+    return ((st.history && st.history.length) || 0) * 1000 + (st.best || 0);
+  }
+
+  function cloudPull(done) {
+    if (!hasCloud) { done(false); return; }
+    let settled = false;
+    const cb = 'jaeCb' + Date.now();
+    const tag = document.createElement('script');
+
+    const finish = ok => {
+      if (settled) return;
+      settled = true;
+      try { delete window[cb]; } catch (e) { window[cb] = undefined; }
+      if (tag.parentNode) tag.parentNode.removeChild(tag);
+      done(ok);
+    };
+
+    window[cb] = str => {
+      if (str) {
+        try {
+          const cloud = Object.assign(FRESH(), JSON.parse(str));
+          if (weight(cloud) > weight(S)) { S = cloud; localSave(); }
+        } catch (e) {}
+      }
+      finish(true);
+    };
+
+    tag.onerror = () => finish(false);
+    tag.src = BACKEND + '?kid=' + encodeURIComponent(KID) +
+              '&callback=' + cb + '&t=' + Date.now();
+    document.head.appendChild(tag);
+
+    // never let a slow network hold the quiz up
+    setTimeout(() => finish(false), 6000);
+  }
+
+  function cloudPush(session) {
+    if (!hasCloud) { setSync('r-sync', 'Saved on this phone'); return; }
+
+    const body = JSON.stringify({
+      kid: KID,
+      state: JSON.stringify(S),
+      session: session ? JSON.stringify(session) : ''
+    });
+
+    // sendBeacon survives the page being closed mid-save
+    try {
+      if (navigator.sendBeacon &&
+          navigator.sendBeacon(BACKEND, new Blob([body], { type: 'text/plain;charset=UTF-8' }))) {
+        setSync('r-sync', '☁ Saved — progress backed up', true);
+        return;
+      }
+    } catch (e) {}
+
+    try {
+      fetch(BACKEND, {
+        method: 'POST', mode: 'no-cors', keepalive: true,
+        headers: { 'Content-Type': 'text/plain;charset=UTF-8' },
+        body: body
+      })
+        .then(() => setSync('r-sync', '☁ Saved — progress backed up', true))
+        .catch(() => setSync('r-sync', 'Saved on this phone'));
+    } catch (e) {
+      setSync('r-sync', 'Saved on this phone');
+    }
+  }
+
+  /* ================= sound ================= */
+  let soundOn = localStorage.getItem('demo-sound') !== 'off';
+  let audioCtx = null;
+  function beep(freq, dur, type, when) {
+    if (!soundOn) return;
+    try {
+      if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      const t = audioCtx.currentTime + (when || 0);
+      const o = audioCtx.createOscillator();
+      const g = audioCtx.createGain();
+      o.type = type || 'sine';
+      o.frequency.value = freq;
+      g.gain.setValueAtTime(0.12, t);
+      g.gain.exponentialRampToValueAtTime(0.001, t + dur);
+      o.connect(g); g.connect(audioCtx.destination);
+      o.start(t); o.stop(t + dur);
+    } catch (e) { /* no audio, no worries */ }
+  }
+  const sndRight = () => { beep(660, .12, 'sine'); beep(880, .18, 'sine', .1); };
+  const sndWrong = () => beep(180, .25, 'square');
+  const sndLevel = () => { beep(523, .1, 'sine'); beep(659, .1, 'sine', .1); beep(784, .2, 'sine', .2); };
+
+  /* ================= categories & levels =================
+     Year 8 (AU Curriculum v9). Level 1-2 = end of Year 6 (momentum start).
+     Level 3-5 = Year 7-8 proper. Level 6-8 = stretch into Year 9.
+  */
+  const CATS = ['Integers', 'Algebra', 'Percentages', 'Ratios & rates', 'Indices', 'Fractions', 'Word problems'];
+
+  const gen = {};
+
+  /* ---- INTEGERS (negatives) ---- */
+  gen['Integers'] = function (lv) {
+    if (lv <= 1) { // add/subtract crossing zero
+      const a = ri(2, 12), b = ri(a + 1, a + 15);
+      return { text: a + ' − ' + b + ' = ?', answer: a - b, type: 'numpad' };
+    }
+    if (lv === 2) { const a = -ri(2, 15), b = ri(2, 20); return { text: sgn(a) + ' + ' + b + ' = ?', answer: a + b, type: 'numpad' }; }
+    if (lv === 3) { const a = ri(2, 18), b = -ri(2, 15); return { text: a + ' − ' + sgn(b) + ' = ?', answer: a - b, type: 'numpad' }; }
+    if (lv === 4) { const a = -ri(2, 12), b = -ri(2, 12); return { text: sgn(a) + ' + ' + sgn(b) + ' = ?', answer: a + b, type: 'numpad' }; }
+    if (lv === 5) { const a = -ri(2, 9), b = ri(2, 9); return { text: sgn(a) + ' × ' + b + ' = ?', answer: a * b, type: 'numpad' }; }
+    if (lv === 6) { const a = -ri(2, 9), b = -ri(2, 9); return { text: sgn(a) + ' × ' + sgn(b) + ' = ?', answer: a * b, type: 'numpad' }; }
+    if (lv === 7) { const b = -ri(2, 9), q = -ri(2, 9); return { text: sgn(b * q) + ' ÷ ' + sgn(b) + ' = ?', answer: q, type: 'numpad' }; }
+    const a = -ri(2, 9), b = ri(2, 8), c = -ri(2, 9);
+    return { text: sgn(a) + ' × ' + b + ' − ' + sgn(c) + ' = ?', answer: a * b - c, type: 'numpad' };
+  };
+
+  /* ---- ALGEBRA ---- */
+  gen['Algebra'] = function (lv) {
+    if (lv <= 1) { const x = ri(2, 15), b = ri(2, 20); return { text: 'x + ' + b + ' = ' + (x + b) + '\nWhat is x?', answer: x, type: 'numpad', small: true }; }
+    if (lv === 2) { const x = ri(2, 12), a = ri(2, 9); return { text: a + 'x = ' + (a * x) + '\nWhat is x?', answer: x, type: 'numpad', small: true }; }
+    if (lv === 3) { const x = ri(2, 10), a = ri(2, 6), b = ri(2, 15); return { text: a + 'x + ' + b + ' = ' + (a * x + b) + '\nWhat is x?', answer: x, type: 'numpad', small: true }; }
+    if (lv === 4) { const x = ri(2, 9), a = ri(2, 7), b = ri(2, 12); return { text: 'If x = ' + x + ', what is ' + a + 'x + ' + b + '?', answer: a * x + b, type: 'numpad', small: true }; }
+    if (lv === 5) { const x = ri(3, 12), a = ri(2, 7), b = ri(2, 18); return { text: a + 'x − ' + b + ' = ' + (a * x - b) + '\nWhat is x?', answer: x, type: 'numpad', small: true }; }
+    if (lv === 6) { const x = ri(2, 9), a = ri(2, 5), b = ri(2, 8); return { text: a + '(x + ' + b + ') = ' + (a * (x + b)) + '\nWhat is x?', answer: x, type: 'numpad', small: true }; }
+    if (lv === 7) { const x = ri(2, 9), a = ri(2, 6), b = ri(2, 9), c = ri(2, 5); return { text: 'If x = ' + x + ', what is ' + a + 'x² − ' + b + '?', answer: a * x * x - b, type: 'numpad', small: true }; }
+    // a must differ from b or both sides collapse to the same expression (any x would work)
+    const x = ri(2, 10), a = ri(4, 8), b = ri(2, 3), c = ri(2, 9);
+    return { text: a + 'x + ' + c + ' = ' + b + 'x + ' + (c + (a - b) * x) + '\nWhat is x?', answer: x, type: 'numpad', small: true };
+  };
+
+  /* ---- PERCENTAGES ---- */
+  gen['Percentages'] = function (lv) {
+    if (lv <= 1) { const n = ri(2, 40) * 10; return { text: '10% of ' + n + ' = ?', answer: n / 10, type: 'numpad' }; }
+    if (lv === 2) { const p = pick([25, 50, 75]); const n = 4 * ri(3, 25); return { text: p + '% of ' + n + ' = ?', answer: n * p / 100, type: 'numpad' }; }
+    if (lv === 3) { const p = pick([20, 30, 40, 60]); const n = 10 * ri(2, 30); return { text: p + '% of ' + n + ' = ?', answer: n * p / 100, type: 'numpad' }; }
+    if (lv === 4) { const p = pick([5, 15, 35]); const n = 20 * ri(2, 15); return { text: p + '% of ' + n + ' = ?', answer: n * p / 100, type: 'numpad' }; }
+    if (lv === 5) { const n = 20 * ri(3, 20); const p = pick([10, 20, 25, 50]); return { text: 'A $' + n + ' item is ' + p + '% off.\nWhat do you pay?', answer: n - n * p / 100, type: 'numpad', small: true }; }
+    if (lv === 6) { const n = 10 * ri(4, 30); const p = pick([10, 20, 25]); return { text: '$' + n + ' goes UP by ' + p + '%.\nWhat is it now?', answer: n + n * p / 100, type: 'numpad', small: true }; }
+    if (lv === 7) { const part = ri(2, 20), whole = part * pick([2, 4, 5, 10]); return { text: 'What % of ' + whole + ' is ' + part + '?', answer: Math.round(part / whole * 100), type: 'numpad', small: true }; }
+    // multiples of 20 keep every discount a whole number
+    const before = 20 * ri(3, 25), p = pick([10, 20, 25, 50]);
+    return { text: 'After ' + p + '% off, it costs $' + (before * (1 - p / 100)) + '.\nWhat was the original price?', answer: before, type: 'numpad', small: true };
+  };
+
+  /* ---- RATIOS & RATES (the F1 one) ---- */
+  gen['Ratios & rates'] = function (lv) {
+    if (lv <= 1) {
+      // a:b must already be in lowest terms, or "simplify" has more than one right answer
+      const pairs = [[1, 2], [1, 3], [2, 3], [1, 4], [3, 4], [2, 5], [3, 5], [4, 5], [5, 6]];
+      const [a, b] = pick(pairs); const k = ri(2, 9);
+      return { text: 'Simplify the ratio ' + (a * k) + ' : ' + (b * k), answer: a + ':' + b, type: 'choice',
+               choices: choiceSet(a + ':' + b, [(a + 1) + ':' + b, a + ':' + (b + 1), (a * k) + ':' + b, b + ':' + a]) };
+    }
+    if (lv === 2) { const parts = ri(2, 5) + ri(1, 4); const per = ri(3, 12); return { text: 'Share ' + (parts * per) + ' tyres in the ratio 1:' + (parts - 1) + '.\nHow many in the SMALL share?', answer: per, type: 'numpad', small: true }; }
+    if (lv === 3) { const spd = ri(3, 20) * 10; const hrs = ri(2, 5); return { text: 'A car does ' + (spd * hrs) + ' km in ' + hrs + ' hours.\nSpeed in km/h?', answer: spd, type: 'numpad', small: true }; }
+    if (lv === 4) { const spd = ri(8, 30) * 10; const hrs = ri(2, 4); return { text: 'At ' + spd + ' km/h for ' + hrs + ' hours,\nhow far?', answer: spd * hrs, type: 'numpad', small: true }; }
+    if (lv === 5) { const lps = ri(2, 6); const fuel = ri(2, 5); return { text: 'The car uses ' + (lps * fuel) + ' L over ' + lps + ' laps.\nLitres per lap?', answer: fuel, type: 'numpad', small: true }; }
+    if (lv === 6) { const a = ri(2, 6), b = ri(2, 6) + 2, k = ri(3, 9); return { text: 'If ' + a + ' : ' + b + ' = ' + (a * k) + ' : ?', answer: b * k, type: 'numpad', small: true }; }
+    // build the distance FROM a clean time so the minutes always land whole
+    if (lv === 7) { const mins = pick([30, 60, 90, 120, 150, 180]); const spd = ri(4, 12) * 10; const km = spd * mins / 60; return { text: km + ' km at ' + spd + ' km/h.\nHow many minutes?', answer: mins, type: 'numpad', small: true }; }
+    const total = ri(3, 9) * 8; const p1 = ri(1, 3), p2 = ri(1, 3) + 1, p3 = 8 - p1 - p2;   // p3 is always 1..5
+    return { text: 'Share ' + total + ' points in the ratio ' + p1 + ':' + p2 + ':' + p3 + '.\nHow many in the BIGGEST share?', answer: total / 8 * Math.max(p1, p2, p3), type: 'numpad', small: true };
+  };
+
+  /* ---- INDICES ---- */
+  gen['Indices'] = function (lv) {
+    if (lv <= 1) { const a = ri(2, 10); return { text: a + '² = ?', answer: a * a, type: 'numpad' }; }
+    if (lv === 2) { const a = ri(2, 6); return { text: a + '³ = ?', answer: a * a * a, type: 'numpad' }; }
+    if (lv === 3) { const a = ri(2, 12); return { text: '√' + (a * a) + ' = ?', answer: a, type: 'numpad' }; }
+    if (lv === 4) { const b = pick([2, 3, 5]); const m = ri(2, 3), n = ri(2, 3); return { text: b + '^' + m + ' × ' + b + '^' + n + ' = ' + b + '^?', answer: m + n, type: 'numpad', small: true }; }
+    if (lv === 5) { const b = pick([2, 3]); const m = ri(4, 6), n = ri(1, 3); return { text: b + '^' + m + ' ÷ ' + b + '^' + n + ' = ' + b + '^?', answer: m - n, type: 'numpad', small: true }; }
+    if (lv === 6) { const a = ri(11, 20); return { text: a + '² = ?', answer: a * a, type: 'numpad' }; }
+    if (lv === 7) { const b = pick([2, 3, 4]); const m = ri(2, 3), n = ri(2, 3); return { text: '(' + b + '^' + m + ')^' + n + ' = ' + b + '^?', answer: m * n, type: 'numpad', small: true }; }
+    const a = pick([2, 3, 5, 10]); const p = ri(3, 5);
+    return { text: a + '^' + p + ' = ?', answer: Math.pow(a, p), type: 'numpad' };
+  };
+
+  /* ---- FRACTIONS (Year 7-8 operations) ---- */
+  gen['Fractions'] = function (lv) {
+    const simp = (n, d) => { const g = gcd(n, d); return (n / g) + '/' + (d / g); };
+    // proper fractions already in lowest terms — safe to use inside questions
+    const LOW = [[1, 2], [1, 3], [2, 3], [1, 4], [3, 4], [1, 5], [2, 5], [3, 5], [4, 5], [1, 6], [5, 6]];
+
+    if (lv <= 1) { const d = pick([3, 4, 5, 8]); const n = ri(1, d - 1); const whole = d * ri(3, 12); return { text: 'What is ' + n + '/' + d + ' of ' + whole + '?', answer: whole / d * n, type: 'numpad' }; }
+    if (lv === 2) {
+      const [n, d] = pick(LOW); const k = ri(2, 6); const right = n + '/' + d;
+      return { text: 'Simplify ' + (n * k) + '/' + (d * k), answer: right, type: 'choice',
+               choices: choiceSet(right, [(n + 1) + '/' + d, n + '/' + (d + 1), (n * k) + '/' + (d * k - 1), (n + 1) + '/' + (d + 1)]) };
+    }
+    if (lv === 3) {
+      const d = pick([4, 6, 8, 10]); const n1 = ri(1, d - 2), n2 = ri(1, d - 1 - n1);
+      const right = simp(n1 + n2, d);
+      return { text: n1 + '/' + d + ' + ' + n2 + '/' + d + ' = ?', answer: right, type: 'choice',
+               choices: choiceSet(right, [(n1 + n2) + '/' + (d * 2), (n1 + n2 + 1) + '/' + d, simp(n1 + n2 + 1, d), (n1 * n2) + '/' + d]) };
+    }
+    if (lv === 4) { const d = pick([2, 4, 5]); const n = ri(1, d - 1); return { text: n + '/' + d + ' as a decimal?', answer: n / d, type: 'numpad' }; }
+    if (lv === 5) {
+      const [a, b] = pick(LOW), [c, e] = pick(LOW);
+      const right = simp(a * c, b * e);
+      return { text: a + '/' + b + ' × ' + c + '/' + e + ' = ?', answer: right, type: 'choice',
+               choices: choiceSet(right, [(a * c) + '/' + (b * e), (a + c) + '/' + (b + e), simp(a * e, b * c), (a * c + 1) + '/' + (b * e)]) };
+    }
+    if (lv === 6) {
+      const d1 = pick([2, 3, 4]), d2 = pick([6, 8, 12]); const n1 = 1, n2 = ri(1, d2 - 1);
+      const den = d1 * d2 / gcd(d1, d2);
+      const num = n1 * (den / d1) + n2 * (den / d2);
+      const right = simp(num, den);
+      return { text: n1 + '/' + d1 + ' + ' + n2 + '/' + d2 + ' = ?', answer: right, type: 'choice',
+               choices: choiceSet(right, [(n1 + n2) + '/' + (d1 + d2), num + '/' + den, simp(num + 1, den), (n1 + n2) + '/' + d2]) };
+    }
+    // only denominators that give a WHOLE percentage — 3/8 = 37.5% would be unmarkable
+    // these denominators always give a whole percentage, so the round only strips float noise
+    // (11/20*100 evaluates to 55.00000000000001 in JS)
+    if (lv === 7) { const d = pick([4, 5, 10, 20]); const n = ri(1, d - 1); return { text: n + '/' + d + ' as a percentage?', answer: Math.round(n / d * 100), type: 'numpad', small: true }; }
+    const [a, b] = pick(LOW), [c, e] = pick(LOW);
+    const right = simp(a * e, b * c);
+    return { text: a + '/' + b + ' ÷ ' + c + '/' + e + ' = ?', answer: right, type: 'choice',
+             choices: choiceSet(right, [simp(a * c, b * e), (a * e) + '/' + (b * c), (a + e) + '/' + (b + c), simp(a * e + 1, b * c)]) };
+  };
+
+  /* ---- WORD PROBLEMS (F1 flavoured) ---- */
+  gen['Word problems'] = function (lv) {
+    const names = ['Alex', 'Verstappen', 'Piastri', 'Norris', 'Hamilton', 'Leclerc', 'the race engineer', 'the pit crew'];
+    const things = ['championship points', 'sets of tyres', 'litres of fuel', 'laps', 'pit stops', 'trophies', 'team stickers'];
+    const who = pick(names), what = pick(things);
+    if (lv <= 1) {
+      const a = ri(20, 90), b = ri(10, 40);
+      if (Math.random() < 0.5) return { text: who + ' has ' + a + ' ' + what + ' and gains ' + b + ' more. How many now?', answer: a + b, type: 'numpad', small: true };
+      return { text: who + ' has ' + (a + b) + ' ' + what + ' and loses ' + b + '. How many left?', answer: a, type: 'numpad', small: true };
+    }
+    if (lv <= 3) {
+      const packs = ri(4, 12), per = ri(4, 15);
+      if (Math.random() < 0.5) return { text: who + ' scores ' + per + ' ' + what + ' in each of ' + packs + ' races. How many altogether?', answer: packs * per, type: 'numpad', small: true };
+      return { text: 'The team splits ' + (packs * per) + ' ' + what + ' evenly across ' + packs + ' races. How many per race?', answer: per, type: 'numpad', small: true };
+    }
+    if (lv === 4) {
+      const laps = ri(20, 60), sec = ri(80, 99);
+      return { text: 'A lap takes ' + sec + ' seconds. How many seconds for ' + laps + ' laps?', answer: laps * sec, type: 'numpad', small: true };
+    }
+    if (lv === 5) {
+      const start = ri(8, 20), gained = ri(3, 7);
+      return { text: who + ' starts P' + start + ' and gains ' + gained + ' places, then loses ' + (gained - 2) + '. What position?', answer: start - gained + (gained - 2), type: 'numpad', small: true };
+    }
+    if (lv === 6) {
+      const price = ri(15, 60), items = ri(3, 9), paid = price * items + ri(20, 90);
+      return { text: who + ' buys ' + items + ' ' + pick(things) + ' at $' + price + ' each and pays with $' + paid + '. How much change?', answer: paid - price * items, type: 'numpad', small: true };
+    }
+    if (lv === 7) {
+      const total = ri(10, 25) * 10, p = pick([20, 25, 40]);
+      return { text: who + ' has ' + total + ' ' + what + ' and loses ' + p + '% after a penalty. How many left?', answer: total - total * p / 100, type: 'numpad', small: true };
+    }
+    // the tank must actually hold enough fuel, or the answer is negative nonsense
+    const laps = ri(40, 70), lit = ri(2, 4), used = lit * laps, tank = used + ri(10, 60);
+    return { text: 'The car burns ' + lit + ' L per lap over ' + laps + ' laps, starting with ' + tank + ' L. How much fuel is left?', answer: tank - used, type: 'numpad', small: true };
+  };
+
+  /* ================= STAGE 2: race engineer radio calls =================
+     Shortcut methods that unlock when a skill is fighting back. */
+  const WEAPONS = [
+    { id: 'int-two-neg', cat: 'Integers', title: 'Two Minuses Make a Plus', body: 'Taking away a negative ADDS. 8 − (−5) becomes 8 + 5 = 13. Two minus signs touching each other always flip to a plus. Every single time.' },
+    { id: 'int-line', cat: 'Integers', title: 'Walk the Number Line', body: 'Plus means walk RIGHT, minus means walk LEFT. −7 + 10: start at −7, walk 10 steps right. You pass zero at step 7, then 3 more. Answer: 3.' },
+    { id: 'int-signs', cat: 'Integers', title: 'Same Signs = Positive', body: 'Multiplying or dividing: same signs give a POSITIVE, different signs give a NEGATIVE. −6 × −4 = 24 (same). −6 × 4 = −24 (different). Just count the minus signs — even means positive.' },
+    { id: 'alg-opposite', cat: 'Algebra', title: 'Do the Opposite', body: 'To get x on its own, undo what is being done to it. x + 7 = 12 → the 7 is being ADDED, so SUBTRACT it from both sides. x = 5. Plus undoes minus, times undoes divide.' },
+    { id: 'alg-balance', cat: 'Algebra', title: 'Keep the Scales Level', body: 'An equation is a set of scales. Whatever you do to one side, do to the other, or it tips over. 3x = 21 → divide BOTH sides by 3 → x = 7.' },
+    { id: 'alg-peel', cat: 'Algebra', title: 'Peel It Like an Onion', body: 'For 2x + 3 = 11, undo in REVERSE order. The +3 happened last, so undo it first: 2x = 8. Then undo the ×2: x = 4. Last on, first off.' },
+    { id: 'pct-dot', cat: 'Percentages', title: '10% Is Just Move the Dot', body: '10% of anything = move the decimal point one place left. 10% of 240 → 24. 10% of 65 → 6.5. Fastest trick in maths.' },
+    { id: 'pct-build', cat: 'Percentages', title: 'Build It From 10%', body: 'Get 10% first, then build. 30% = three lots of 10%. 5% = half of 10%. 35% of 80: 10% is 8, so 30% is 24, 5% is 4 → 28. No calculator needed.' },
+    { id: 'pct-off', cat: 'Percentages', title: 'Flip the Discount', body: '20% off means you PAY 80%. Instead of finding the discount and subtracting, jump straight to what you pay. $60 with 25% off → you pay 75% → $45. One step, not two.' },
+    { id: 'rat-divide', cat: 'Ratios & rates', title: 'Rate Means Divide', body: 'Any "per" question is a divide. Km per hour = km ÷ hours. Litres per lap = litres ÷ laps. Spot the word "per" and you know the operation.' },
+    { id: 'rat-parts', cat: 'Ratios & rates', title: 'Add the Parts First', body: 'Sharing 40 in the ratio 3:5? Add the parts: 3 + 5 = 8. One part = 40 ÷ 8 = 5. So the shares are 15 and 25. Always find ONE part first.' },
+    { id: 'ind-count', cat: 'Indices', title: 'The Power Counts the Multiplies', body: '2⁵ means 2 multiplied by itself 5 times: 2×2×2×2×2 = 32. The little number is just how many, not what to times by.' },
+    { id: 'ind-add', cat: 'Indices', title: 'Same Base? Add the Powers', body: '2³ × 2⁴ = 2⁷. When the big numbers match, multiplying means ADD the powers, dividing means SUBTRACT them. You never touch the base.' },
+    { id: 'frac-both', cat: 'Fractions', title: 'Times Both, Same Fraction', body: 'A fraction stays equal if you multiply top AND bottom by the same number. 1/2 = 2/4 = 5/10. To simplify, go backwards: divide both by whatever fits.' },
+    { id: 'frac-times', cat: 'Fractions', title: 'Multiplying Is the Easy One', body: 'To multiply fractions just go straight across: tops × tops, bottoms × bottoms. 2/3 × 3/5 = 6/15 = 2/5. No common denominator needed — that is only for adding.' },
+    { id: 'wp-detective', cat: 'Word problems', title: 'Be a Number Detective', body: 'Step 1: circle the numbers. Step 2: find the magic word — "altogether"/"total" means ADD or TIMES; "left"/"change"/"loses" means SUBTRACT; "each"/"per"/"share" means DIVIDE. Step 3: do the maths.' }
+  ];
+
+  /* ================= state ================= */
+  const MAX_LV = 8, SESSION_SECS = 600;
+  let catLv = {}, catUp = {}, catDown = {};
+  let stats = {};
+  let current = null, locked = false, paused = false;
+  let score = 0, hit = 0, asked = 0, streak = 0, bestStreak = 0;
+  let secsLeft = SESSION_SECS, tick = null;
+  let lastCat = null;
+  let pendingWeapon = null;
+  let weaponCatsThisSession = {};
+  let newWeaponsTonight = 0;
+
+  function loadLevels() {
+    CATS.forEach(c => { catLv[c] = Math.min(MAX_LV, Math.max(1, S.levels[c] || 1)); catUp[c] = 0; catDown[c] = 0; stats[c] = { asked: 0, correct: 0 }; });
+  }
+
+  /* ================= stages ================= */
+  const RANKS = ['Rookie', 'Test Driver', 'Points Scorer', 'Podium Finisher', 'Race Winner', 'Pole Sitter', 'Title Contender', 'World Champion'];
+  function stageInfo() {
+    const n = S.history.length;
+    if (n < 3) return { num: 1, html: '<span class="eyebrow">Stage 1 · Pre-season testing</span>Session ' + (n + 1) + ' of 3 — finding Alex’s true pace in every skill. Just have a crack!' };
+    const lvls = CATS.map(c => S.levels[c] || 1);
+    const avg = lvls.reduce((a, b) => a + b, 0) / lvls.length;
+    if (n >= 15 || avg >= 5) return { num: 3, html: '<span class="eyebrow">Stage 3 · Championship</span>' + n + ' races logged. The grid keeps getting faster as Alex gets faster.' };
+    return { num: 2, html: '<span class="eyebrow">Stage 2 · Race weekend</span>Weak skills get extra laps — and the race engineer comes on the radio with a shortcut when one fights back.' };
+  }
+
+  /* ================= screens ================= */
+  function show(id) {
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('on'));
+    $(id).classList.add('on');
+  }
+
+  function paintStart() {
+    $('st-days').textContent = S.days.streak || 0;
+    const lvls = CATS.map(c => S.levels[c] || 1);
+    const avgLv = Math.round(lvls.reduce((a, b) => a + b, 0) / lvls.length);
+    $('st-level').textContent = avgLv;
+    $('st-level-lbl').textContent = RANKS[Math.min(avgLv, RANKS.length) - 1];
+    $('st-best').textContent = S.best || 0;
+    $('stage-banner').innerHTML = stageInfo().html;
+    if (S.history.length) {
+      const h = S.history[S.history.length - 1];
+      $('last-night').innerHTML = 'Last race: <b>' + h.hit + '/' + h.asked + '</b> clean laps &middot; <b>' + h.score + '</b> pts (' + h.date + ')';
+    } else {
+      $('last-night').textContent = 'First race tonight. Lights out.';
+    }
+    $('btn-book').innerHTML = '&#128202; Telemetry (' + S.weapons.length + ')';
+    $('btn-sound').textContent = 'Sound: ' + (soundOn ? 'ON' : 'OFF');
+  }
+
+  function paintBook() {
+    const box = $('book-list');
+    box.innerHTML = '';
+    if (!S.weapons.length) {
+      box.innerHTML = '<div class="book-item"><p>No radio calls logged yet. The race engineer comes on mid-session and teaches a shortcut when a skill gets tricky — that’s when Alex needs it most.</p></div>';
+      return;
+    }
+    S.weapons.forEach(id => {
+      const w = WEAPONS.find(x => x.id === id);
+      if (!w) return;
+      const el = document.createElement('div');
+      el.className = 'book-item';
+      el.innerHTML = '<div class="w-cat">' + w.cat + '</div><h3>' + w.title + '</h3><p>' + w.body + '</p>';
+      box.appendChild(el);
+    });
+  }
+
+  /* ================= quiz flow ================= */
+  function startQuiz() {
+    loadLevels();
+    score = 0; hit = 0; asked = 0; streak = 0; bestStreak = 0;
+    secsLeft = SESSION_SECS; lastCat = null;
+    paused = false; pendingWeapon = null; weaponCatsThisSession = {}; newWeaponsTonight = 0;
+    $('score-live').textContent = '0 pts';
+    $('streak').textContent = '🏎️ 0';
+    $('streak').classList.remove('hot');
+    show('scr-quiz');
+    clearInterval(tick);
+    tick = setInterval(onTick, 1000);
+    onTick(true);
+    nextQuestion();
+  }
+
+  function onTick(first) {
+    if (paused) return;
+    if (first !== true) secsLeft--;
+    const m = Math.floor(secsLeft / 60), s = secsLeft % 60;
+    const elapsed = SESSION_SECS - secsLeft;
+    const stint = Math.min(4, 1 + Math.floor(elapsed / (SESSION_SECS / 4)));
+    $('timer').textContent = 'STINT ' + stint + ' · ' + m + ':' + String(s).padStart(2, '0');
+    $('timer').classList.toggle('low', secsLeft <= 60);
+    const pct = elapsed / SESSION_SECS * 100;
+    $('time-fill').style.width = pct + '%';
+    $('car').style.left = pct + '%';
+    if (secsLeft <= 0) endQuiz();
+  }
+
+  function pickCat() {
+    const pool = [];
+    CATS.forEach(c => {
+      if (c === lastCat) return;
+      const st = stats[c];
+      const acc = st.asked ? st.correct / st.asked : 1;
+      const weight = acc < 0.6 && st.asked >= 2 ? 3 : 1;   // struggling -> more reps
+      for (let i = 0; i < weight; i++) pool.push(c);
+    });
+    return pick(pool);
+  }
+
+  function nextQuestion() {
+    if (secsLeft <= 0) return;
+    locked = false;
+    const cat = pickCat();
+    lastCat = cat;
+    current = gen[cat](catLv[cat]);
+    current.cat = cat;
+    $('q-cat').textContent = cat.toUpperCase() + ' · LV ' + catLv[cat];
+    const qt = $('q-text');
+    qt.className = 'q-text' + (current.small ? ' small' : '');
+    if (current.html) qt.innerHTML = current.text;
+    else if (String(current.text).includes('\n')) { qt.innerHTML = String(current.text).split('\n').map(s => s.replace(/&/g, '&amp;').replace(/</g, '&lt;')).join('<br>'); }
+    else qt.textContent = current.text;
+    $('feedback').textContent = ' ';
+    $('feedback').className = 'feedback';
+    $('q-card').classList.remove('right', 'wrong');
+    if (current.type === 'numpad') {
+      typed = '';
+      $('a-line').innerHTML = '&nbsp;';
+      $('a-line').style.display = '';
+      $('pad').style.display = '';
+      $('choices').style.display = 'none';
+    } else {
+      $('a-line').style.display = 'none';
+      $('pad').style.display = 'none';
+      const box = $('choices');
+      box.innerHTML = '';
+      box.style.display = '';
+      current.choices.forEach(ch => {
+        const b = document.createElement('button');
+        b.textContent = ch;
+        b.addEventListener('click', () => submit(ch));
+        box.appendChild(b);
+      });
+    }
+  }
+
+  let typed = '';
+  $('pad').addEventListener('click', e => {
+    const k = e.target.getAttribute && e.target.getAttribute('data-k');
+    if (!k || locked || !current || current.type !== 'numpad') return;
+    if (k === 'go') { if (typed !== '' && typed !== '.' && typed !== '-') submit(typed); return; }
+    if (k === 'back') typed = typed.slice(0, -1);
+    else if (k === 'neg') { typed = typed.startsWith('-') ? typed.slice(1) : '-' + typed; }
+    else if (k === '.') { if (!typed.includes('.')) typed += (typed === '' || typed === '-') ? '0.' : '.'; }
+    else if (typed.replace(/[.-]/g, '').length < 7) typed += k;
+    $('a-line').innerHTML = typed === '' ? '&nbsp;' : typed;
+  });
+
+  document.addEventListener('keydown', e => {
+    if (!$('scr-quiz').classList.contains('on') || locked || !current || current.type !== 'numpad') return;
+    if (/^[0-9]$/.test(e.key) && typed.replace(/[.-]/g, '').length < 7) typed += e.key;
+    else if (e.key === '-' && typed === '') typed = '-';
+    else if (e.key === '.' && !typed.includes('.')) typed += (typed === '' || typed === '-') ? '0.' : '.';
+    else if (e.key === 'Backspace') typed = typed.slice(0, -1);
+    else if (e.key === 'Enter') { if (typed !== '' && typed !== '.' && typed !== '-') submit(typed); return; }
+    else return;
+    $('a-line').innerHTML = typed === '' ? '&nbsp;' : typed;
+  });
+
+  function maybeUnlockWeapon(cat) {
+    // Stage 2 only, once per skill per night, when the skill is clearly fighting back
+    if (S.history.length < 3) return;
+    if (weaponCatsThisSession[cat]) return;
+    const st = stats[cat];
+    if (st.asked < 3 || st.correct / st.asked >= 0.6) return;
+    let w = WEAPONS.find(x => x.cat === cat && !S.weapons.includes(x.id));   // new one first
+    if (!w) w = pick(WEAPONS.filter(x => x.cat === cat));                     // else re-show one
+    if (!w) return;
+    weaponCatsThisSession[cat] = true;
+    if (!S.weapons.includes(w.id)) { S.weapons.push(w.id); newWeaponsTonight++; localSave(); }
+    pendingWeapon = w;
+  }
+
+  function showWeapon(w) {
+    paused = true;
+    $('w-title').textContent = w.title;
+    $('w-body').textContent = w.body;
+    sndLevel();
+    show('scr-weapon');
+  }
+  $('btn-w-back').addEventListener('click', () => {
+    paused = false;
+    show('scr-quiz');
+    nextQuestion();
+  });
+
+  function submit(val) {
+    if (locked || !current) return;
+    locked = true;
+    asked++;
+    const cat = current.cat;
+    stats[cat].asked++;
+    let correct;
+    if (current.type === 'numpad') correct = Math.abs(parseFloat(val) - current.answer) < 1e-9;
+    else correct = val === current.answer;
+
+    const card = $('q-card'), fb = $('feedback');
+    if (correct) {
+      hit++;
+      streak++;
+      bestStreak = Math.max(bestStreak, streak);
+      stats[cat].correct++;
+      const bonus = Math.min(streak, 5);
+      score += 10 + bonus;
+      fb.textContent = pick(['PURPLE SECTOR!', 'FASTEST LAP!', 'P1!', 'DRS OPEN!', 'OVERTAKE!', 'ON THE LIMIT!']) + ' +' + (10 + bonus);
+      fb.className = 'feedback good';
+      card.classList.add('right');
+      sndRight();
+      catUp[cat]++; catDown[cat] = 0;
+      if (catUp[cat] >= 3 && catLv[cat] < MAX_LV) {
+        catLv[cat]++;
+        catUp[cat] = 0;
+        fb.textContent = '⭐ UPGRADE! ' + cat + ' is now Lv ' + catLv[cat];
+        sndLevel();
+      }
+    } else {
+      streak = 0;
+      fb.textContent = 'Not quite — it’s ' + current.answer;
+      fb.className = 'feedback bad';
+      card.classList.add('wrong');
+      sndWrong();
+      catDown[cat]++; catUp[cat] = 0;
+      if (catDown[cat] >= 2 && catLv[cat] > 1) { catLv[cat]--; catDown[cat] = 0; }
+      maybeUnlockWeapon(cat);
+    }
+    $('streak').textContent = (streak >= 3 ? '🔥 ' : '🏎️ ') + streak;
+    $('streak').classList.toggle('hot', streak >= 3);
+    $('score-live').textContent = score + ' pts';
+    setTimeout(() => {
+      if (secsLeft <= 0) return;
+      if (pendingWeapon) { const w = pendingWeapon; pendingWeapon = null; showWeapon(w); }
+      else nextQuestion();
+    }, correct ? 900 : 2000);
+  }
+
+  /* ================= end + report ================= */
+  function endQuiz(endedEarly) {
+    clearInterval(tick);
+    paused = false;
+    const minsPlayed = Math.max(0, Math.round((SESSION_SECS - Math.max(0, secsLeft)) / 6) / 10);
+    secsLeft = 0;   // stops any queued next-question callbacks
+    CATS.forEach(c => S.levels[c] = catLv[c]);
+    if (score > (S.best || 0)) S.best = score;
+    const todayStr = new Date().toDateString();
+    if (S.days.last !== todayStr) {
+      const yesterday = new Date(Date.now() - 864e5).toDateString();
+      S.days.streak = (S.days.last === yesterday) ? (S.days.streak || 0) + 1 : 1;
+      S.days.last = todayStr;
+    }
+    const now = new Date();
+    const acc = asked ? Math.round(hit / asked * 100) : 0;
+    S.history.push({ date: now.getDate() + '/' + (now.getMonth() + 1), score: score, hit: hit, asked: asked });
+    if (S.history.length > 60) S.history = S.history.slice(-60);
+    localSave();
+
+    const session = {
+      score: score, hit: hit, asked: asked, acc: acc,
+      finished: endedEarly ? 'Boxed early — ' + minsPlayed + ' min' : 'Full 10 minutes',
+      levels: CATS.map(c => c + ':' + catLv[c]).join(' '),
+      skills: CATS.map(c => c + ' ' + (stats[c].asked ? Math.round(stats[c].correct / stats[c].asked * 100) + '%' : '-')).join(' | '),
+      weapons: S.weapons.length
+    };
+    setSync('r-sync', hasCloud ? 'Backing up…' : 'Saved on this phone');
+    cloudPush(session);
+
+    $('r-score').textContent = score;
+    $('r-hit').textContent = hit + '/' + asked;
+    $('r-acc').textContent = acc + '%';
+    $('r-streakbest').textContent = bestStreak;
+    const justRanked = S.history.length === 3;
+    $('r-headline').textContent =
+      justRanked ? '🏆 TESTING DONE! Race weekend starts tomorrow.' :
+      acc >= 85 ? 'Championship pace, Alex! 🏁' :
+      acc >= 65 ? 'Solid drive. Quicker every stint!' :
+      asked === 0 ? 'The clock beat you tonight — rematch tomorrow!' :
+      'Tough race — champions bounce back tomorrow.';
+
+    const box = $('r-cats');
+    box.innerHTML = '';
+    let bestCat = null, worstCat = null, bestAcc = -1, worstAcc = 2;
+    CATS.forEach(c => {
+      const st = stats[c];
+      if (!st.asked) return;
+      const a = st.correct / st.asked;
+      if (a > bestAcc) { bestAcc = a; bestCat = c; }
+      if (a < worstAcc) { worstAcc = a; worstCat = c; }
+      const row = document.createElement('div');
+      row.className = 'cat-row';
+      const pctN = Math.round(a * 100);
+      // F1 timing colours: purple = flying, green = solid, yellow = needs work
+      const barCol = a >= 0.85 ? 'background:var(--purple);' : a >= 0.6 ? '' : 'background:var(--amber);';
+      row.innerHTML = '<div class="name">' + c + ' <span style="color:var(--cream-dim);font-size:.8em;">Lv ' + catLv[c] + '</span></div>'
+        + '<div class="bar"><i style="width:' + pctN + '%;' + barCol + '"></i></div>'
+        + '<div class="pct">' + pctN + '%</div>';
+      box.appendChild(row);
+    });
+    const coach = $('r-coach');
+    if (asked === 0) {
+      coach.innerHTML = 'No laps completed this race. Just hit lights out and have a crack — ten minutes goes fast!';
+    } else if (justRanked) {
+      coach.innerHTML = '<span class="eyebrow">Race engineer’s note</span><br>Testing done — Alex’s starting levels are locked in above. From tomorrow it’s the race weekend: extra laps on the weak skills, with radio shortcuts when one fights back.';
+    } else if (newWeaponsTonight > 0) {
+      coach.innerHTML = '<span class="eyebrow">Race engineer’s note</span><br>' + newWeaponsTonight + ' new radio call' + (newWeaponsTonight > 1 ? 's' : '') + ' logged tonight — check &#128202; Telemetry on the home screen and run ' + (newWeaponsTonight > 1 ? 'them' : 'it') + ' tomorrow.';
+    } else if (bestCat && worstCat && bestCat !== worstCat && worstAcc < 0.7) {
+      coach.innerHTML = '<span class="eyebrow">Race engineer’s note</span><br><b>' + bestCat + '</b> was the strongest sector tonight. <b>' + worstCat + '</b> needs more laps — the game will serve extra ones next time automatically.';
+    } else {
+      coach.innerHTML = '<span class="eyebrow">Race engineer’s note</span><br>Consistent pace across every sector. The grid gets a little quicker as Alex does — that’s how champions are made.';
+    }
+    show('scr-report');
+  }
+
+  /* ================= wiring ================= */
+  $('btn-start').addEventListener('click', () => { if (audioCtx === null && soundOn) beep(1, .01); startQuiz(); });
+  $('btn-end').addEventListener('click', () => endQuiz(true));
+  $('btn-again').addEventListener('click', () => { paintStart(); show('scr-start'); });
+  $('btn-book').addEventListener('click', () => { paintBook(); show('scr-book'); });
+  $('btn-book-back').addEventListener('click', () => { paintStart(); show('scr-start'); });
+  $('btn-sound').addEventListener('click', () => {
+    soundOn = !soundOn;
+    try { localStorage.setItem('demo-sound', soundOn ? 'on' : 'off'); } catch (e) {}
+    $('btn-sound').textContent = 'Sound: ' + (soundOn ? 'ON' : 'OFF');
+  });
+
+  /* ================= boot ================= */
+  S = localLoad();
+  paintStart();
+  if (hasCloud) {
+    setSync('sync-chip', 'Checking for saved progress…');
+    cloudPull(ok => {
+      setSync('sync-chip',
+        ok ? '☁ Synced — progress saved' : 'Playing offline — progress saved on this phone',
+        ok);
+      paintStart();
+    });
+  } else {
+    setSync('sync-chip', 'Progress saves on this phone');
+  }
+})();
+</script>
