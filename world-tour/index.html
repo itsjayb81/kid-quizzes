@@ -1,0 +1,1124 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<title>Zoe&rsquo;s World Tour</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<style>
+  :root {
+    /* A dark arena lit by stage lights. Hot pink key light, blue spot, gold glitter. */
+    --night: #14061A;        /* house lights down */
+    --panel: #26102F;
+    --panel-deep: #1C0B24;
+    --cream: #FFF0FA;
+    --cream-dim: #C29ABA;
+    --neon: #FF2E93;         /* hot pink stage light */
+    --neon-deep: #B01063;
+    --cyan: #45E0FF;         /* the spotlight */
+    --red: #FF5C5C;
+    --green: #2BF5A8;        /* personal best */
+    --amber: #FFD24A;        /* gold confetti */
+    --radius: 18px;
+    --display: ui-rounded, "Segoe UI", "Trebuchet MS", Verdana, sans-serif;
+  }
+  html, body { margin: 0; padding: 0; }
+  body {
+    background: var(--night);
+    color: var(--cream);
+    font-family: var(--display);
+    min-height: 100vh;
+    -webkit-tap-highlight-color: transparent;
+  }
+  * { box-sizing: border-box; user-select: none; }
+
+  .wrap {
+    max-width: 480px;
+    margin: 0 auto;
+    padding: 16px 16px 32px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    min-height: 100vh;
+  }
+
+  .screen { display: none; flex-direction: column; gap: 14px; flex: 1; }
+  .screen.on { display: flex; }
+
+  /* ---------- shared bits ---------- */
+  .big-btn {
+    font-family: var(--display);
+    font-weight: 800;
+    font-size: 1.35rem;
+    border: none;
+    border-radius: var(--radius);
+    padding: 20px 24px;
+    background: var(--neon);
+    color: #FFF;
+    cursor: pointer;
+    box-shadow: 0 5px 0 var(--neon-deep);
+    transition: transform .08s ease;
+  }
+  .big-btn:active { transform: translateY(4px); box-shadow: 0 1px 0 var(--neon-deep); }
+  .ghost-btn {
+    background: none;
+    border: 2px solid #3A3A4C;
+    color: var(--cream-dim);
+    border-radius: 12px;
+    padding: 10px 16px;
+    font-family: var(--display);
+    font-weight: 700;
+    font-size: .95rem;
+    cursor: pointer;
+  }
+  .card {
+    background: var(--panel);
+    border-radius: var(--radius);
+    padding: 18px;
+  }
+  .eyebrow {
+    font-size: .72rem;
+    font-weight: 800;
+    letter-spacing: .14em;
+    text-transform: uppercase;
+    color: var(--neon);
+  }
+
+  /* ---------- start screen ---------- */
+  .hero { text-align: center; padding-top: 12px; }
+  .target-logo { width: 108px; height: 108px; margin: 0 auto 8px; display: block; }
+  h1 {
+    font-size: 2rem;
+    font-weight: 900;
+    margin: 6px 0 2px;
+    letter-spacing: -.01em;
+    text-wrap: balance;
+  }
+  .sub { color: var(--cream-dim); margin: 0; font-size: 1rem; }
+  .stage-banner {
+    background: var(--panel);
+    border: 2px solid var(--neon);
+    border-radius: var(--radius);
+    padding: 12px 16px;
+    text-align: center;
+    font-size: .95rem;
+    line-height: 1.45;
+  }
+  .stage-banner .eyebrow { display: block; margin-bottom: 2px; }
+  .stat-row { display: flex; gap: 10px; }
+  .stat {
+    flex: 1;
+    background: var(--panel);
+    border-radius: var(--radius);
+    padding: 14px 10px;
+    text-align: center;
+  }
+  .stat .num {
+    font-size: 1.7rem;
+    font-weight: 900;
+    color: var(--neon);
+    font-variant-numeric: tabular-nums;
+  }
+  .stat .lbl { font-size: .72rem; color: var(--cream-dim); font-weight: 700; letter-spacing: .06em; text-transform: uppercase; }
+  .last-night { font-size: .95rem; color: var(--cream-dim); text-align: center; min-height: 1.2em; }
+  .last-night b { color: var(--cream); }
+  .sync-chip { text-align: center; font-size: .8rem; font-weight: 700; color: var(--cream-dim); min-height: 1.2em; }
+  .sync-chip.cloud { color: var(--green); }
+  .btn-pair { display: flex; gap: 10px; }
+  .btn-pair .ghost-btn { flex: 1; }
+
+  /* ---------- quiz screen ---------- */
+  .topbar { display: flex; align-items: center; gap: 12px; }
+  .timer-pill {
+    background: var(--panel);
+    border-radius: 999px;
+    padding: 8px 14px;
+    font-weight: 800;
+    font-variant-numeric: tabular-nums;
+    font-size: 1rem;
+    min-width: 82px;
+    text-align: center;
+  }
+  .timer-pill.low { color: var(--neon); }
+  .track {
+    flex: 1;
+    height: 12px;
+    background: var(--panel);
+    border-radius: 999px;
+    position: relative;
+  }
+  .track .fill {
+    height: 100%;
+    width: 0%;
+    background: var(--neon);
+    border-radius: 999px;
+    transition: width 1s linear;
+  }
+  .track .car {
+    position: absolute;
+    top: 50%;
+    left: 0%;
+    transform: translate(-50%, -55%);
+    font-size: 20px;
+    line-height: 1;
+    transition: left 1s linear;
+    pointer-events: none;
+  }
+  .track .flag {
+    position: absolute;
+    top: 50%;
+    right: -4px;
+    transform: translateY(-60%);
+    font-size: 14px;
+    line-height: 1;
+    pointer-events: none;
+  }
+  .streak-pill {
+    background: var(--panel);
+    border-radius: 999px;
+    padding: 8px 14px;
+    font-weight: 800;
+    font-size: 1rem;
+    min-width: 60px;
+    text-align: center;
+  }
+  .streak-pill.hot { background: #3A1250; color: var(--cyan); }
+
+  .q-card {
+    background: var(--panel);
+    border-radius: var(--radius);
+    padding: 22px 18px;
+    text-align: center;
+    position: relative;
+    min-height: 150px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 8px;
+  }
+  .q-cat { font-size: .72rem; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; color: var(--cream-dim); }
+  .q-text {
+    font-size: 1.9rem;
+    font-weight: 900;
+    line-height: 1.25;
+    text-wrap: balance;
+  }
+  .q-text.small { font-size: 1.25rem; font-weight: 700; line-height: 1.45; }
+  .answer-line {
+    font-size: 2rem;
+    font-weight: 900;
+    color: var(--neon);
+    min-height: 1.3em;
+    font-variant-numeric: tabular-nums;
+    border-bottom: 3px dashed #3A3A4C;
+    display: inline-block;
+    min-width: 110px;
+    margin: 0 auto;
+  }
+  .q-card.right { animation: pop .45s ease; outline: 3px solid var(--green); }
+  .q-card.wrong { animation: shake .4s ease; outline: 3px solid var(--red); }
+  @keyframes pop { 0% { transform: scale(1); } 40% { transform: scale(1.04); } 100% { transform: scale(1); } }
+  @keyframes shake {
+    0%,100% { transform: translateX(0); }
+    25% { transform: translateX(-8px); }
+    75% { transform: translateX(8px); }
+  }
+  .feedback {
+    font-weight: 900;
+    font-size: 1.1rem;
+    min-height: 1.4em;
+  }
+  .feedback.good { color: var(--green); }
+  .feedback.bad { color: var(--red); }
+
+  .pad {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+  }
+  .pad button {
+    font-family: var(--display);
+    font-size: 1.6rem;
+    font-weight: 800;
+    padding: 16px 0;
+    border: none;
+    border-radius: 14px;
+    background: var(--panel-deep);
+    color: var(--cream);
+    cursor: pointer;
+    box-shadow: 0 4px 0 #0D0D14;
+  }
+  .pad button:active { transform: translateY(3px); box-shadow: 0 1px 0 #0D0D14; }
+  .pad button.go { background: var(--neon); color: #FFF; box-shadow: 0 4px 0 var(--neon-deep); }
+  .pad button.del { color: var(--cream-dim); font-size: 1.3rem; }
+
+  .choices { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .choices button {
+    font-family: var(--display);
+    font-size: 1.5rem;
+    font-weight: 800;
+    padding: 22px 8px;
+    border: none;
+    border-radius: 14px;
+    background: var(--panel-deep);
+    color: var(--cream);
+    cursor: pointer;
+    box-shadow: 0 4px 0 #0D0D14;
+  }
+  .choices button:active { transform: translateY(3px); box-shadow: 0 1px 0 #0D0D14; }
+
+  .quiz-foot { display: flex; justify-content: space-between; align-items: center; }
+  .score-live { font-weight: 900; font-size: 1.1rem; color: var(--neon); font-variant-numeric: tabular-nums; }
+
+  /* ---------- backstage tip ---------- */
+  .weapon-card {
+    background: var(--panel);
+    border: 3px solid var(--cyan);
+    border-radius: var(--radius);
+    padding: 24px 20px;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin: auto 0;
+  }
+  .weapon-card .w-icon { font-size: 3rem; line-height: 1; }
+  .weapon-card .eyebrow { color: var(--cyan); }
+  .weapon-card h2 { margin: 0; font-size: 1.5rem; font-weight: 900; }
+  .weapon-card p { margin: 0; font-size: 1.1rem; line-height: 1.55; color: var(--cream); }
+  .book-list { display: flex; flex-direction: column; gap: 10px; }
+  .book-item { background: var(--panel); border-radius: 14px; padding: 14px 16px; text-align: left; }
+  .book-item h3 { margin: 0 0 4px; font-size: 1.05rem; font-weight: 900; color: var(--cyan); }
+  .book-item p { margin: 0; font-size: .95rem; line-height: 1.5; color: var(--cream); }
+  .book-item .w-cat { font-size: .7rem; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; color: var(--cream-dim); }
+
+  /* ---------- report screen ---------- */
+  .report-hero { text-align: center; padding-top: 10px; }
+  .report-hero .big-score {
+    font-size: 3.2rem;
+    font-weight: 900;
+    color: var(--neon);
+    line-height: 1;
+    font-variant-numeric: tabular-nums;
+  }
+  .report-hero .headline { font-size: 1.3rem; font-weight: 900; margin-top: 6px; }
+  .cat-list { display: flex; flex-direction: column; gap: 8px; }
+  .cat-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: var(--panel-deep);
+    border-radius: 12px;
+    padding: 10px 12px;
+  }
+  .cat-row .name { flex: 1; font-weight: 700; font-size: .95rem; }
+  .cat-row .bar {
+    flex: 1.2;
+    height: 10px;
+    background: #0D0D14;
+    border-radius: 999px;
+    overflow: hidden;
+  }
+  .cat-row .bar i { display: block; height: 100%; background: var(--green); border-radius: 999px; }
+  .cat-row .pct { width: 44px; text-align: right; font-weight: 800; font-variant-numeric: tabular-nums; font-size: .9rem; }
+  .note { color: var(--cream-dim); font-size: .9rem; text-align: center; margin: 0; }
+  .legend { font-size: .72rem; color: var(--cream-dim); text-align: center; margin: 8px 0 0; }
+  .legend b { font-weight: 800; }
+
+  @media (prefers-reduced-motion: reduce) {
+    .q-card.right, .q-card.wrong { animation: none; }
+    .track .fill { transition: none; }
+  }
+  button:focus-visible { outline: 3px solid var(--cream); outline-offset: 2px; }
+</style>
+
+<div class="wrap">
+
+  <!-- ============ START ============ -->
+  <div class="screen on" id="scr-start">
+    <div class="hero">
+      <svg class="target-logo" viewBox="0 0 120 120" aria-hidden="true">
+        <!-- two stage-light beams coming down onto the mic -->
+        <path d="M18 4 L34 4 L58 84 L40 84 Z" fill="#45E0FF" opacity=".18"/>
+        <path d="M86 4 L102 4 L80 84 L62 84 Z" fill="#FF2E93" opacity=".18"/>
+        <!-- mic head -->
+        <rect x="48" y="18" width="24" height="40" rx="12" fill="#FF2E93"/>
+        <line x1="53" y1="27" x2="67" y2="27" stroke="#14061A" stroke-width="2.5" stroke-linecap="round"/>
+        <line x1="53" y1="34" x2="67" y2="34" stroke="#14061A" stroke-width="2.5" stroke-linecap="round"/>
+        <line x1="53" y1="41" x2="67" y2="41" stroke="#14061A" stroke-width="2.5" stroke-linecap="round"/>
+        <!-- mic cradle + stem -->
+        <path d="M40 52 a20 20 0 0 0 40 0" fill="none" stroke="#FFF0FA" stroke-width="4" stroke-linecap="round"/>
+        <line x1="60" y1="72" x2="60" y2="96" stroke="#FFF0FA" stroke-width="4" stroke-linecap="round"/>
+        <ellipse cx="60" cy="100" rx="18" ry="5" fill="#26102F" stroke="#FFF0FA" stroke-width="3"/>
+        <!-- sparkle -->
+        <path d="M96 62 L99 70 L107 73 L99 76 L96 84 L93 76 L85 73 L93 70 Z" fill="#FFD24A"/>
+        <path d="M22 66 L24 71 L29 73 L24 75 L22 80 L20 75 L15 73 L20 71 Z" fill="#45E0FF"/>
+      </svg>
+      <div class="eyebrow">Ten minutes a night &middot; 4 sets</div>
+      <h1>Zoe&rsquo;s World Tour</h1>
+      <p class="sub">Hit every note. Nail the numbers. Sell out the show.</p>
+    </div>
+
+    <div class="stage-banner" id="stage-banner"></div>
+
+    <div class="stat-row">
+      <div class="stat"><div class="num" id="st-days">0</div><div class="lbl">Night streak</div></div>
+      <div class="stat"><div class="num" id="st-level">1</div><div class="lbl" id="st-level-lbl">Rookie</div></div>
+      <div class="stat"><div class="num" id="st-best">0</div><div class="lbl">Best points</div></div>
+    </div>
+
+    <div class="last-night" id="last-night"></div>
+    <div class="sync-chip" id="sync-chip"></div>
+
+    <button class="big-btn" id="btn-start">SHOWTIME &mdash; START &#127908;</button>
+    <div class="btn-pair">
+      <button class="ghost-btn" id="btn-book">&#127915; Backstage Pass (0)</button>
+      <button class="ghost-btn" id="btn-sound">Sound: ON</button>
+    </div>
+  </div>
+
+  <!-- ============ QUIZ ============ -->
+  <div class="screen" id="scr-quiz">
+    <div class="topbar">
+      <div class="timer-pill" id="timer">SET 1 &middot; 10:00</div>
+      <div class="track"><div class="fill" id="time-fill"></div><div class="car" id="car">&#127908;</div><div class="flag">&#11088;</div></div>
+      <div class="streak-pill" id="streak">&#127908; 0</div>
+    </div>
+
+    <div class="q-card" id="q-card">
+      <div class="q-cat" id="q-cat">TIMES TABLES</div>
+      <div class="q-text" id="q-text">7 &times; 8 = ?</div>
+      <div class="answer-line" id="a-line">&nbsp;</div>
+      <div class="feedback" id="feedback">&nbsp;</div>
+    </div>
+
+    <div class="pad" id="pad">
+      <button data-k="1">1</button><button data-k="2">2</button><button data-k="3">3</button>
+      <button data-k="4">4</button><button data-k="5">5</button><button data-k="6">6</button>
+      <button data-k="7">7</button><button data-k="8">8</button><button data-k="9">9</button>
+      <button data-k="." class="del">&middot;</button><button data-k="0">0</button><button data-k="back" class="del">&#9003;</button>
+      <button data-k="go" class="go" style="grid-column: 1 / -1;">CHECK &#10148;</button>
+    </div>
+
+    <div class="choices" id="choices" style="display:none;"></div>
+
+    <div class="quiz-foot">
+      <button class="ghost-btn" id="btn-end">Finish early</button>
+      <div class="score-live" id="score-live">0 pts</div>
+    </div>
+  </div>
+
+  <!-- ============ CHEAT CODE UNLOCK ============ -->
+  <div class="screen" id="scr-weapon">
+    <div class="weapon-card">
+      <div class="w-icon">&#128161;</div>
+      <div class="eyebrow">Backstage tip &middot; clock stopped</div>
+      <h2 id="w-title">The 9s Finger Trick</h2>
+      <p id="w-body"></p>
+      <button class="big-btn" id="btn-w-back">GOT IT &mdash; BACK ON STAGE</button>
+    </div>
+  </div>
+
+  <!-- ============ CHEAT CODES ============ -->
+  <div class="screen" id="scr-book">
+    <div class="hero" style="padding-top:4px;">
+      <div class="eyebrow">Zoe&rsquo;s collection</div>
+      <h1 style="font-size:1.5rem;">Backstage Pass</h1>
+    </div>
+    <div class="book-list" id="book-list"></div>
+    <button class="big-btn" id="btn-book-back">BACK</button>
+  </div>
+
+  <!-- ============ REPORT ============ -->
+  <div class="screen" id="scr-report">
+    <div class="report-hero">
+      <div class="eyebrow">Show finished</div>
+      <div class="big-score" id="r-score">0</div>
+      <div class="headline" id="r-headline">Nice show!</div>
+    </div>
+
+    <div class="stat-row">
+      <div class="stat"><div class="num" id="r-hit">0/0</div><div class="lbl">Notes hit</div></div>
+      <div class="stat"><div class="num" id="r-acc">0%</div><div class="lbl">Accuracy</div></div>
+      <div class="stat"><div class="num" id="r-streakbest">0</div><div class="lbl">Best streak</div></div>
+    </div>
+
+    <div class="card">
+      <div class="eyebrow" style="margin-bottom:10px;">Tour report &mdash; show Mum or Dad</div>
+      <div class="cat-list" id="r-cats"></div>
+      <p class="legend"><b style="color:var(--cyan);">&#9632; blue</b> = flying &middot; <b style="color:var(--green);">&#9632; green</b> = solid &middot; <b style="color:var(--amber);">&#9632; gold</b> = needs work</p>
+    </div>
+
+    <div class="card" id="r-coach" style="font-size:1rem; line-height:1.5;"></div>
+    <div class="sync-chip" id="r-sync"></div>
+
+    <button class="big-btn" id="btn-again">ENCORE TOMORROW &#11088;</button>
+    <p class="note">Same time tomorrow keeps the night streak alive.</p>
+  </div>
+
+</div>
+
+<script>
+(function () {
+  'use strict';
+
+  /* ================= helpers ================= */
+  const $ = id => document.getElementById(id);
+  const ri = (a, b) => a + Math.floor(Math.random() * (b - a + 1)); // inclusive
+  const pick = arr => arr[Math.floor(Math.random() * arr.length)];
+  const shuffle = arr => { const a = arr.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+  const sgn = n => (n < 0 ? '(' + n + ')' : String(n));   // wrap negatives for readability
+  const gcd = (a, b) => b ? gcd(b, a % b) : Math.abs(a);
+  // builds a multiple-choice set that always contains the right answer and never repeats itself
+  const choiceSet = (right, wrongs, n) => {
+    const out = [right];
+    for (const w of wrongs) { if (out.length >= (n || 4)) break; if (!out.includes(w)) out.push(w); }
+    return shuffle(out);
+  };
+
+  /* ================= progress + backup =================
+     This is a plain web page, so it opens on any phone with no Google account
+     and no sign-in. The phone itself is the source of truth — the quiz ALWAYS
+     plays, even with no signal at all.
+
+     If BACKEND is filled in, we additionally:
+       · pull shared progress on load (JSONP — works from any domain)
+       · push progress + the night's result after each game (fire and forget)
+     If the backend is slow, blocked or down, nothing breaks. */
+  const KID = 'zoe';
+  const BACKEND = 'https://script.google.com/macros/s/AKfycby5-jHEmIvJ4vO25R4iFkMeAzGwuoXT9p0HZFOVeZL_xhiLVF4O4Zy8CmX-Ef4QhJMT/exec';   // ← Apps Script /exec URL goes here
+
+  const hasCloud = !!BACKEND;
+
+  const FRESH = () => ({ levels: {}, days: {}, best: 0, history: [], weapons: [] });
+  let S = FRESH();
+
+  function localLoad() {
+    try {
+      const raw = localStorage.getItem('zoe-state-v2');
+      if (raw) return Object.assign(FRESH(), JSON.parse(raw));
+    } catch (e) {}
+    return FRESH();
+  }
+  function localSave() {
+    try { localStorage.setItem('zoe-state-v2', JSON.stringify(S)); } catch (e) {}
+  }
+
+  function setSync(el, msg, good) {
+    const n = $(el); if (!n) return;
+    n.textContent = msg;
+    n.className = 'sync-chip' + (good ? ' cloud' : '');
+  }
+
+  // How much play a saved state represents — used to make sure a phone that
+  // played offline never gets wiped by an older copy from the backend.
+  function weight(st) {
+    return ((st.history && st.history.length) || 0) * 1000 + (st.best || 0);
+  }
+
+  function cloudPull(done) {
+    if (!hasCloud) { done(false); return; }
+    let settled = false;
+    const cb = 'jaeCb' + Date.now();
+    const tag = document.createElement('script');
+
+    const finish = ok => {
+      if (settled) return;
+      settled = true;
+      try { delete window[cb]; } catch (e) { window[cb] = undefined; }
+      if (tag.parentNode) tag.parentNode.removeChild(tag);
+      done(ok);
+    };
+
+    window[cb] = str => {
+      if (str) {
+        try {
+          const cloud = Object.assign(FRESH(), JSON.parse(str));
+          if (weight(cloud) > weight(S)) { S = cloud; localSave(); }
+        } catch (e) {}
+      }
+      finish(true);
+    };
+
+    tag.onerror = () => finish(false);
+    tag.src = BACKEND + '?kid=' + encodeURIComponent(KID) +
+              '&callback=' + cb + '&t=' + Date.now();
+    document.head.appendChild(tag);
+
+    // never let a slow network hold the quiz up
+    setTimeout(() => finish(false), 6000);
+  }
+
+  function cloudPush(session) {
+    if (!hasCloud) { setSync('r-sync', 'Saved on this phone'); return; }
+
+    const body = JSON.stringify({
+      kid: KID,
+      state: JSON.stringify(S),
+      session: session ? JSON.stringify(session) : ''
+    });
+
+    // sendBeacon survives the page being closed mid-save
+    try {
+      if (navigator.sendBeacon &&
+          navigator.sendBeacon(BACKEND, new Blob([body], { type: 'text/plain;charset=UTF-8' }))) {
+        setSync('r-sync', '☁ Saved — progress backed up', true);
+        return;
+      }
+    } catch (e) {}
+
+    try {
+      fetch(BACKEND, {
+        method: 'POST', mode: 'no-cors', keepalive: true,
+        headers: { 'Content-Type': 'text/plain;charset=UTF-8' },
+        body: body
+      })
+        .then(() => setSync('r-sync', '☁ Saved — progress backed up', true))
+        .catch(() => setSync('r-sync', 'Saved on this phone'));
+    } catch (e) {
+      setSync('r-sync', 'Saved on this phone');
+    }
+  }
+
+  /* ================= sound ================= */
+  let soundOn = localStorage.getItem('zoe-sound') !== 'off';
+  let audioCtx = null;
+  function beep(freq, dur, type, when) {
+    if (!soundOn) return;
+    try {
+      if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      const t = audioCtx.currentTime + (when || 0);
+      const o = audioCtx.createOscillator();
+      const g = audioCtx.createGain();
+      o.type = type || 'sine';
+      o.frequency.value = freq;
+      g.gain.setValueAtTime(0.12, t);
+      g.gain.exponentialRampToValueAtTime(0.001, t + dur);
+      o.connect(g); g.connect(audioCtx.destination);
+      o.start(t); o.stop(t + dur);
+    } catch (e) { /* no audio, no worries */ }
+  }
+  const sndRight = () => { beep(660, .12, 'sine'); beep(880, .18, 'sine', .1); };
+  const sndWrong = () => beep(180, .25, 'square');
+  const sndLevel = () => { beep(523, .1, 'sine'); beep(659, .1, 'sine', .1); beep(784, .2, 'sine', .2); };
+
+  /* ================= categories & levels =================
+     Year 5 (AU Curriculum v9). Level 1-2 = end of Year 4, so night one is a win.
+     Level 3-5 = Year 5 proper. Level 6-8 = stretch into Year 6.
+  */
+  const CATS = ['Times tables', 'Division', 'Add & subtract', 'Fractions', 'Decimals', 'Word problems'];
+
+  const gen = {};
+
+  gen['Times tables'] = function (lv) {
+    let a, b;
+    if (lv <= 1) { a = pick([2, 3, 4, 5, 10]); b = ri(2, 9); }
+    else if (lv === 2) { a = pick([3, 4, 6, 7, 8, 9]); b = ri(2, 9); }
+    else if (lv === 3) { a = ri(2, 10); b = ri(2, 10); }
+    else if (lv === 4) { a = ri(2, 12); b = ri(3, 9); }
+    else if (lv === 5) { a = ri(12, 29); b = ri(2, 5); }        // 2-digit x small
+    else if (lv === 6) { a = ri(13, 49); b = ri(3, 7); }
+    else if (lv === 7) { a = ri(11, 25); b = ri(11, 19); }      // 2-digit x 2-digit
+    else { a = ri(15, 39); b = ri(12, 25); }
+    return { text: a + ' \u00d7 ' + b + ' = ?', answer: a * b, type: 'numpad' };
+  };
+
+  gen['Division'] = function (lv) {
+    if (lv <= 2) { const b = pick(lv === 1 ? [2, 3, 4, 5, 10] : [3, 4, 6, 7, 8, 9]); const q = ri(2, 9); return { text: (b * q) + ' \u00f7 ' + b + ' = ?', answer: q, type: 'numpad' }; }
+    if (lv === 3) { const b = ri(2, 10); const q = ri(2, 10); return { text: (b * q) + ' \u00f7 ' + b + ' = ?', answer: q, type: 'numpad' }; }
+    if (lv === 4 || lv === 5) { // remainders
+      const b = ri(3, lv === 4 ? 6 : 9); const q = ri(3, 9); const r = ri(1, b - 1);
+      return { text: (b * q + r) + ' \u00f7 ' + b + ' &mdash; what is the <u>remainder</u>?', answer: r, type: 'numpad', html: true };
+    }
+    if (lv === 6) { const b = ri(3, 9); const q = ri(11, 25); return { text: (b * q) + ' \u00f7 ' + b + ' = ?', answer: q, type: 'numpad' }; }
+    const b = ri(4, 12); const q = ri(15, 40);
+    return { text: (b * q) + ' \u00f7 ' + b + ' = ?', answer: q, type: 'numpad' };
+  };
+
+  gen['Add & subtract'] = function (lv) {
+    const add = Math.random() < 0.5;
+    let a, b;
+    if (lv <= 1) { a = ri(12, 89); b = ri(11, 89); }
+    else if (lv === 2) { a = ri(110, 899); b = ri(25, 99); }
+    else if (lv === 3) { a = ri(150, 950); b = ri(110, 850); }
+    else if (lv === 4) { a = ri(1100, 8900); b = ri(150, 990); }
+    else if (lv === 5) { a = ri(1200, 9800); b = ri(1100, 8800); }
+    else if (lv === 6) { a = ri(12000, 89000); b = ri(1500, 9900); }
+    else { a = ri(15000, 98000); b = ri(11000, 88000); }
+    if (add) return { text: a + ' + ' + b + ' = ?', answer: a + b, type: 'numpad' };
+    const hi = Math.max(a, b), lo = Math.min(a, b);
+    return { text: hi + ' \u2212 ' + lo + ' = ?', answer: hi - lo, type: 'numpad' };
+  };
+
+  gen['Fractions'] = function (lv) {
+    if (lv <= 2) {
+      if (Math.random() < 0.5) {
+        const d = pick(lv === 1 ? [2, 4] : [2, 3, 4, 5]);
+        const whole = d * ri(2, lv === 1 ? 6 : 9);
+        return { text: 'What is 1/' + d + ' of ' + whole + '?', answer: whole / d, type: 'numpad' };
+      }
+      const k = ri(2, 5);
+      const right = k + '/' + (2 * k);
+      const wrongs = shuffle([(k) + '/' + (2 * k + 1), (k + 1) + '/' + (2 * k), k + '/' + (3 * k)]).slice(0, 3);
+      return { text: 'Which fraction equals 1/2?', answer: right, type: 'choice', choices: shuffle([right].concat(wrongs)) };
+    }
+    if (lv === 3) { // compare same denominator
+      const d = pick([5, 6, 8, 10, 12]);
+      let n1 = ri(1, d - 1), n2 = ri(1, d - 1);
+      while (n2 === n1) n2 = ri(1, d - 1);
+      const big = Math.max(n1, n2) + '/' + d, small = Math.min(n1, n2) + '/' + d;
+      return { text: 'Which is bigger?', answer: big, type: 'choice', choices: shuffle([big, small]) };
+    }
+    if (lv === 4) { // add same denominator (answer stays proper)
+      const d = pick([5, 6, 8, 10, 12]);
+      const n1 = ri(1, d - 3), n2 = ri(1, d - 1 - n1);
+      const sum = n1 + n2;
+      const right = sum + '/' + d;
+      // The classic wrong moves: adding the bottoms too, an off-by-one, and timesing
+      // instead of adding. Any of those can collide with each other (2+3 and 2×3 sit
+      // one apart), so choiceSet dedupes and the spare candidates keep it at 4 options.
+      const wrongs = [sum + '/' + (d + d), (sum + 1) + '/' + d, (n1 * n2) + '/' + d,
+                      (sum - 1) + '/' + d, sum + '/' + (d + 1)];
+      return { text: n1 + '/' + d + ' + ' + n2 + '/' + d + ' = ?', answer: right, type: 'choice', choices: choiceSet(right, wrongs, 4) };
+    }
+    if (lv === 5) { // equivalent fractions general
+      const bases = [[1, 3], [2, 3], [1, 4], [3, 4], [2, 5], [3, 5]];
+      const [n, d] = pick(bases); const k = ri(2, 4);
+      const right = (n * k) + '/' + (d * k);
+      const wrongs = [(n * k + 1) + '/' + (d * k), (n * k) + '/' + (d * k + k), (n + k) + '/' + (d + k)];
+      return { text: 'Which fraction equals ' + n + '/' + d + '?', answer: right, type: 'choice', choices: shuffle([right].concat(wrongs)) };
+    }
+    if (lv === 6) { // fraction of quantity
+      const d = pick([3, 4, 5, 8]); const n = ri(1, d - 1); const whole = d * ri(3, 9);
+      return { text: 'What is ' + n + '/' + d + ' of ' + whole + '?', answer: whole / d * n, type: 'numpad' };
+    }
+    // lv 7-8: simplify
+    const bases = [[1, 2], [1, 3], [2, 3], [1, 4], [3, 4], [2, 5], [3, 5], [4, 5], [5, 6]];
+    const [n, d] = pick(bases); const k = ri(2, 6);
+    const right = n + '/' + d;
+    const wrongs = shuffle([(n + 1) + '/' + d, n + '/' + (d + 1), (n + 1) + '/' + (d + 2)]);
+    return { text: 'Simplify ' + (n * k) + '/' + (d * k), answer: right, type: 'choice', choices: shuffle([right].concat(wrongs)) };
+  };
+
+  gen['Decimals'] = function (lv) {
+    const fix = (x, dp) => parseFloat(x.toFixed(dp));
+    if (lv <= 2) { // compare tenths
+      let a = ri(1, 9) / 10, b = ri(1, 9) / 10;
+      while (b === a) b = ri(1, 9) / 10;
+      const big = String(Math.max(a, b)), small = String(Math.min(a, b));
+      return { text: 'Which is bigger?', answer: big, type: 'choice', choices: shuffle([big, small]) };
+    }
+    if (lv === 3) { // compare trickier (0.7 vs 0.65)
+      const a = ri(2, 9) / 10;
+      let b = fix(a - 0.05 + (Math.random() < 0.5 ? -ri(1, 20) / 100 : ri(1, 4) / 100), 2);
+      if (b <= 0 || b === a) b = fix(a - 0.07, 2);
+      const big = String(Math.max(a, b)), small = String(Math.min(a, b));
+      return { text: 'Which is bigger?', answer: big, type: 'choice', choices: shuffle([big, small]) };
+    }
+    if (lv === 4) { const a = ri(1, 9) / 10, b = ri(1, 9) / 10; return { text: a + ' + ' + b + ' = ?', answer: fix(a + b, 1), type: 'numpad' }; }
+    if (lv === 5) { const a = ri(11, 99) / 10, b = ri(11, 99) / 10; return { text: a + ' + ' + b + ' = ?', answer: fix(a + b, 1), type: 'numpad' }; }
+    if (lv === 6) { const a = ri(11, 99) / 100, b = ri(11, 99) / 100; return { text: a + ' + ' + b + ' = ?', answer: fix(a + b, 2), type: 'numpad' }; }
+    if (lv === 7) { const a = ri(101, 999) / 100, b = ri(11, 99) / 10; const hi = Math.max(a, b), lo = Math.min(a, b); return { text: hi + ' \u2212 ' + lo + ' = ?', answer: fix(hi - lo, 2), type: 'numpad' }; }
+    const a = ri(1, 9) / 10; const m = ri(2, 9);
+    return { text: a + ' \u00d7 ' + m + ' = ?', answer: fix(a * m, 1), type: 'numpad' };
+  };
+
+  /* ---- WORD PROBLEMS (tour + concert flavoured) ---- */
+  gen['Word problems'] = function (lv) {
+    // All singular on purpose - the sentences below use "has"/"buys", so a plural
+    // name here reads as "the dancers has 71 glow sticks".
+    const names = ['Zoe', 'her best mate', 'the tour manager', 'the drummer', 'the backup dancer', 'the roadie'];
+    const things = ['concert tickets', 'tour posters', 'glow sticks', 'friendship bracelets', 'backstage passes', 'vinyl records', 'tour t-shirts'];
+    const who = pick(names), what = pick(things);
+    if (lv <= 2) {
+      const a = ri(12, 60), b = ri(5, 30);
+      if (Math.random() < 0.5) return { text: who + ' has ' + a + ' ' + what + ' and gets ' + b + ' more. How many now?', answer: a + b, type: 'numpad', small: true };
+      return { text: who + ' has ' + (a + b) + ' ' + what + ' and gives away ' + b + '. How many left?', answer: a, type: 'numpad', small: true };
+    }
+    if (lv <= 4) {
+      if (Math.random() < 0.4) {   // the group has 6 members - her own fact, doing maths
+        const each = ri(2, 9);
+        return { text: 'Zoe’s favourite group has 6 members. They each sing ' + each + ' songs. How many songs altogether?', answer: 6 * each, type: 'numpad', small: true };
+      }
+      const packs = ri(3, 9), per = ri(4, 12);
+      if (Math.random() < 0.5) return { text: who + ' buys ' + packs + ' packs of ' + what + ' with ' + per + ' in each pack. How many altogether?', answer: packs * per, type: 'numpad', small: true };
+      return { text: who + ' shares ' + (packs * per) + ' ' + what + ' equally between ' + packs + ' people. How many each?', answer: per, type: 'numpad', small: true };
+    }
+    if (lv <= 6) { // two-step
+      if (Math.random() < 0.4) {   // seats in rows plus the front row - a real two-stepper
+        const rows = ri(6, 15), per = ri(8, 20), front = ri(5, 25);
+        return { text: 'The arena has ' + rows + ' rows of ' + per + ' seats, plus ' + front + ' front-row seats. How many seats altogether?', answer: rows * per + front, type: 'numpad', small: true };
+      }
+      const packs = ri(3, 8), per = ri(5, 12), extra = ri(3, 20);
+      return { text: who + ' buys ' + packs + ' packs of ' + what + ' (' + per + ' in each) plus ' + extra + ' loose ones. How many altogether?', answer: packs * per + extra, type: 'numpad', small: true };
+    }
+    // money, two-step
+    const price = ri(2, 6), items = ri(3, 9), paid = price * items + ri(5, 20);
+    return { text: pick(names) + ' buys ' + items + ' ' + pick(things) + ' at $' + price + ' each and pays with $' + paid + '. How much change?', answer: paid - price * items, type: 'numpad', small: true };
+  };
+
+  /* ================= STAGE 2: backstage tips =================
+     Shortcut methods that unlock when a skill is fighting back. */
+  const WEAPONS = [
+    { id: 'tt-9s', cat: 'Times tables', title: 'The 9s Finger Trick', body: 'Hold up all 10 fingers. For 9 \u00d7 4, bend your 4th finger down. Fingers on the left = 3, fingers on the right = 6. Answer: 36. Works for the WHOLE 9 times table.' },
+    { id: 'tt-double', cat: 'Times tables', title: 'The Double-Double', body: '\u00d74 is just double, then double again. 7 \u00d7 4? Double 7 is 14. Double 14 is 28. Done. (\u00d78 = double THREE times.)' },
+    { id: 'tt-5s', cat: 'Times tables', title: 'The Half-of-Ten Trick', body: '\u00d75 is \u00d710 cut in half. 8 \u00d7 5? First 8 \u00d7 10 = 80. Half of 80 = 40. Tens are easy \u2014 use them.' },
+    { id: 'div-back', cat: 'Division', title: 'Division is Times, Backwards', body: '56 \u00f7 8 is really asking: \u201c8 times WHAT makes 56?\u201d Run the 8 times table until you hit 56. 8 \u00d7 7 = 56, so the answer is 7.' },
+    { id: 'div-left', cat: 'Division', title: 'Remainder = Leftovers', body: '17 \u00f7 5: how many 5s fit inside 17? Three of them (that\u2019s 15). What\u2019s left over? 17 \u2212 15 = 2. The remainder is 2 \u2014 just the leftovers.' },
+    { id: 'add-jump', cat: 'Add & subtract', title: 'Jump to the Ten', body: '38 + 25? Jump 38 up to 40 (that used 2 of the 25). Then 40 + 23 = 63. Round numbers are stepping stones \u2014 jump on them.' },
+    { id: 'sub-up', cat: 'Add & subtract', title: 'Count UP, Not Back', body: '82 \u2212 67? Don\u2019t count backwards \u2014 count UP from 67. Up 3 gets you to 70. Up 12 more gets you to 82. 3 + 12 = 15. Subtraction just became adding.' },
+    { id: 'frac-tops', cat: 'Fractions', title: 'Same Bottom? Add the Tops', body: '3/8 + 2/8: the bottoms match, so just add the tops. 3 + 2 = 5, answer 5/8. The bottom number NEVER changes.' },
+    { id: 'frac-pizza', cat: 'Fractions', title: 'The Pizza Rule', body: '3/4 of 20? Cut the 20 into 4 equal slices: 20 \u00f7 4 = 5. You want 3 slices: 3 \u00d7 5 = 15. Divide by the bottom, times by the top.' },
+    { id: 'frac-both', cat: 'Fractions', title: 'The Times-Both Trick', body: 'Fractions stay equal if you multiply the top AND bottom by the same number. 1/2 = 2/4 = 3/6 = 4/8. Same amount of pizza, just more slices.' },
+    { id: 'dec-money', cat: 'Decimals', title: 'Think Money', body: '0.7 + 0.5? Think coins: 70c + 50c = 120c = $1.20, so the answer is 1.2. Decimals are just dollars and cents in disguise.' },
+    { id: 'dec-dots', cat: 'Decimals', title: 'Line Up the Dots', body: 'Which is bigger, 0.7 or 0.65? Make them the same length: 0.70 vs 0.65. Now it\u2019s obvious \u2014 70 beats 65. Add a zero, compare like normal numbers.' },
+    { id: 'wp-detective', cat: 'Word problems', title: 'Be a Number Detective', body: 'Step 1: spot the numbers. Step 2: find the magic word \u2014 \u201caltogether\u201d or \u201ctotal\u201d means ADD or TIMES; \u201cleft\u201d, \u201cchange\u201d or \u201cgives away\u201d means SUBTRACT; \u201ceach\u201d or \u201cshare\u201d means DIVIDE. Step 3: do the maths.' }
+  ];
+
+  /* ================= state ================= */
+  const MAX_LV = 8, SESSION_SECS = 600;
+  let catLv = {}, catUp = {}, catDown = {};
+  let stats = {};
+  let current = null, locked = false, paused = false;
+  let score = 0, hit = 0, asked = 0, streak = 0, bestStreak = 0;
+  let secsLeft = SESSION_SECS, tick = null;
+  let lastCat = null;
+  let pendingWeapon = null;
+  let weaponCatsThisSession = {};
+  let newWeaponsTonight = 0;
+
+  function loadLevels() {
+    CATS.forEach(c => { catLv[c] = Math.min(MAX_LV, Math.max(1, S.levels[c] || 1)); catUp[c] = 0; catDown[c] = 0; stats[c] = { asked: 0, correct: 0 }; });
+  }
+
+  /* ================= stages ================= */
+  const RANKS = ['Busker', 'Open Mic', 'Support Act', 'Headliner', 'Chart Climber', 'Top 10', 'Number One', 'Global Superstar'];
+  function stageInfo() {
+    const n = S.history.length;
+    if (n < 3) return { num: 1, html: '<span class="eyebrow">Stage 1 · Soundcheck</span>Show ' + (n + 1) + ' of 3 — finding Zoe’s level in every skill. Just have a crack!' };
+    const lvls = CATS.map(c => S.levels[c] || 1);
+    const avg = lvls.reduce((a, b) => a + b, 0) / lvls.length;
+    if (n >= 15 || avg >= 5) return { num: 3, html: '<span class="eyebrow">Stage 3 · Stadium tour</span>' + n + ' shows played. The maths keeps getting harder as Zoe gets better.' };
+    return { num: 2, html: '<span class="eyebrow">Stage 2 · On tour</span>Weak skills get extra turns — and a backstage tip turns up with a shortcut when one fights back.' };
+  }
+
+  /* ================= screens ================= */
+  function show(id) {
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('on'));
+    $(id).classList.add('on');
+  }
+
+  function paintStart() {
+    $('st-days').textContent = S.days.streak || 0;
+    const lvls = CATS.map(c => S.levels[c] || 1);
+    const avgLv = Math.round(lvls.reduce((a, b) => a + b, 0) / lvls.length);
+    $('st-level').textContent = avgLv;
+    $('st-level-lbl').textContent = RANKS[Math.min(avgLv, RANKS.length) - 1];
+    $('st-best').textContent = S.best || 0;
+    $('stage-banner').innerHTML = stageInfo().html;
+    if (S.history.length) {
+      const h = S.history[S.history.length - 1];
+      $('last-night').innerHTML = 'Last show: <b>' + h.hit + '/' + h.asked + '</b> notes hit &middot; <b>' + h.score + '</b> pts (' + h.date + ')';
+    } else {
+      $('last-night').textContent = 'First show tonight. Take the stage.';
+    }
+    $('btn-book').innerHTML = '&#127915; Backstage Pass (' + S.weapons.length + ')';
+    $('btn-sound').textContent = 'Sound: ' + (soundOn ? 'ON' : 'OFF');
+  }
+
+  function paintBook() {
+    const box = $('book-list');
+    box.innerHTML = '';
+    if (!S.weapons.length) {
+      box.innerHTML = '<div class="book-item"><p>No backstage tips yet. One turns up mid-show and teaches a shortcut when a skill gets tricky — that’s when Zoe needs it most.</p></div>';
+      return;
+    }
+    S.weapons.forEach(id => {
+      const w = WEAPONS.find(x => x.id === id);
+      if (!w) return;
+      const el = document.createElement('div');
+      el.className = 'book-item';
+      el.innerHTML = '<div class="w-cat">' + w.cat + '</div><h3>' + w.title + '</h3><p>' + w.body + '</p>';
+      box.appendChild(el);
+    });
+  }
+
+  /* ================= quiz flow ================= */
+  function startQuiz() {
+    loadLevels();
+    score = 0; hit = 0; asked = 0; streak = 0; bestStreak = 0;
+    secsLeft = SESSION_SECS; lastCat = null;
+    paused = false; pendingWeapon = null; weaponCatsThisSession = {}; newWeaponsTonight = 0;
+    $('score-live').textContent = '0 pts';
+    $('streak').textContent = '🎤 0';
+    $('streak').classList.remove('hot');
+    show('scr-quiz');
+    clearInterval(tick);
+    tick = setInterval(onTick, 1000);
+    onTick(true);
+    nextQuestion();
+  }
+
+  function onTick(first) {
+    if (paused) return;
+    if (first !== true) secsLeft--;
+    const m = Math.floor(secsLeft / 60), s = secsLeft % 60;
+    const elapsed = SESSION_SECS - secsLeft;
+    const set = Math.min(4, 1 + Math.floor(elapsed / (SESSION_SECS / 4)));
+    $('timer').textContent = 'SET ' + set + ' · ' + m + ':' + String(s).padStart(2, '0');
+    $('timer').classList.toggle('low', secsLeft <= 60);
+    const pct = elapsed / SESSION_SECS * 100;
+    $('time-fill').style.width = pct + '%';
+    $('car').style.left = pct + '%';
+    if (secsLeft <= 0) endQuiz();
+  }
+
+  function pickCat() {
+    const pool = [];
+    CATS.forEach(c => {
+      if (c === lastCat) return;
+      const st = stats[c];
+      const acc = st.asked ? st.correct / st.asked : 1;
+      const weight = acc < 0.6 && st.asked >= 2 ? 3 : 1;   // struggling -> more reps
+      for (let i = 0; i < weight; i++) pool.push(c);
+    });
+    return pick(pool);
+  }
+
+  function nextQuestion() {
+    if (secsLeft <= 0) return;
+    locked = false;
+    const cat = pickCat();
+    lastCat = cat;
+    current = gen[cat](catLv[cat]);
+    current.cat = cat;
+    $('q-cat').textContent = cat.toUpperCase() + ' · LV ' + catLv[cat];
+    const qt = $('q-text');
+    qt.className = 'q-text' + (current.small ? ' small' : '');
+    if (current.html) qt.innerHTML = current.text;
+    else if (String(current.text).includes('\n')) { qt.innerHTML = String(current.text).split('\n').map(s => s.replace(/&/g, '&amp;').replace(/</g, '&lt;')).join('<br>'); }
+    else qt.textContent = current.text;
+    $('feedback').textContent = ' ';
+    $('feedback').className = 'feedback';
+    $('q-card').classList.remove('right', 'wrong');
+    if (current.type === 'numpad') {
+      typed = '';
+      $('a-line').innerHTML = '&nbsp;';
+      $('a-line').style.display = '';
+      $('pad').style.display = '';
+      $('choices').style.display = 'none';
+    } else {
+      $('a-line').style.display = 'none';
+      $('pad').style.display = 'none';
+      const box = $('choices');
+      box.innerHTML = '';
+      box.style.display = '';
+      current.choices.forEach(ch => {
+        const b = document.createElement('button');
+        b.textContent = ch;
+        b.addEventListener('click', () => submit(ch));
+        box.appendChild(b);
+      });
+    }
+  }
+
+  let typed = '';
+  $('pad').addEventListener('click', e => {
+    const k = e.target.getAttribute && e.target.getAttribute('data-k');
+    if (!k || locked || !current || current.type !== 'numpad') return;
+    if (k === 'go') { if (typed !== '' && typed !== '.') submit(typed); return; }
+    if (k === 'back') typed = typed.slice(0, -1);
+    else if (k === '.') { if (!typed.includes('.')) typed += (typed === '') ? '0.' : '.'; }
+    else if (typed.replace(/[.-]/g, '').length < 7) typed += k;
+    $('a-line').innerHTML = typed === '' ? '&nbsp;' : typed;
+  });
+
+  document.addEventListener('keydown', e => {
+    if (!$('scr-quiz').classList.contains('on') || locked || !current || current.type !== 'numpad') return;
+    // No minus key: nothing at Year 5 has a negative answer, so it could only ever
+    // turn a right answer into a wrong one.
+    if (/^[0-9]$/.test(e.key) && typed.replace(/[.-]/g, '').length < 7) typed += e.key;
+    else if (e.key === '.' && !typed.includes('.')) typed += (typed === '') ? '0.' : '.';
+    else if (e.key === 'Backspace') typed = typed.slice(0, -1);
+    else if (e.key === 'Enter') { if (typed !== '' && typed !== '.') submit(typed); return; }
+    else return;
+    $('a-line').innerHTML = typed === '' ? '&nbsp;' : typed;
+  });
+
+  function maybeUnlockWeapon(cat) {
+    // Stage 2 only, once per skill per night, when the skill is clearly fighting back
+    if (S.history.length < 3) return;
+    if (weaponCatsThisSession[cat]) return;
+    const st = stats[cat];
+    if (st.asked < 3 || st.correct / st.asked >= 0.6) return;
+    let w = WEAPONS.find(x => x.cat === cat && !S.weapons.includes(x.id));   // new one first
+    if (!w) w = pick(WEAPONS.filter(x => x.cat === cat));                     // else re-show one
+    if (!w) return;
+    weaponCatsThisSession[cat] = true;
+    if (!S.weapons.includes(w.id)) { S.weapons.push(w.id); newWeaponsTonight++; localSave(); }
+    pendingWeapon = w;
+  }
+
+  function showWeapon(w) {
+    paused = true;
+    $('w-title').textContent = w.title;
+    $('w-body').textContent = w.body;
+    sndLevel();
+    show('scr-weapon');
+  }
+  $('btn-w-back').addEventListener('click', () => {
+    paused = false;
+    show('scr-quiz');
+    nextQuestion();
+  });
+
+  function submit(val) {
+    if (locked || !current) return;
+    locked = true;
+    asked++;
+    const cat = current.cat;
+    stats[cat].asked++;
+    let correct;
+    if (current.type === 'numpad') correct = Math.abs(parseFloat(val) - current.answer) < 1e-9;
+    else correct = val === current.answer;
+
+    const card = $('q-card'), fb = $('feedback');
+    if (correct) {
+      hit++;
+      streak++;
+      bestStreak = Math.max(bestStreak, streak);
+      stats[cat].correct++;
+      const bonus = Math.min(streak, 5);
+      score += 10 + bonus;
+      fb.textContent = pick(['PERFECT PITCH!', 'ENCORE!', 'CROWD GOES WILD!', 'HIGH NOTE!', 'ON FIRE!', 'LEVEL UP!']) + ' +' + (10 + bonus);
+      fb.className = 'feedback good';
+      card.classList.add('right');
+      sndRight();
+      catUp[cat]++; catDown[cat] = 0;
+      if (catUp[cat] >= 3 && catLv[cat] < MAX_LV) {
+        catLv[cat]++;
+        catUp[cat] = 0;
+        fb.textContent = '⭐ UPGRADE! ' + cat + ' is now Lv ' + catLv[cat];
+        sndLevel();
+      }
+    } else {
+      streak = 0;
+      fb.textContent = 'Not quite — it’s ' + current.answer;
+      fb.className = 'feedback bad';
+      card.classList.add('wrong');
+      sndWrong();
+      catDown[cat]++; catUp[cat] = 0;
+      if (catDown[cat] >= 2 && catLv[cat] > 1) { catLv[cat]--; catDown[cat] = 0; }
+      maybeUnlockWeapon(cat);
+    }
+    $('streak').textContent = (streak >= 3 ? '🔥 ' : '🎤 ') + streak;
+    $('streak').classList.toggle('hot', streak >= 3);
+    $('score-live').textContent = score + ' pts';
+    setTimeout(() => {
+      if (secsLeft <= 0) return;
+      if (pendingWeapon) { const w = pendingWeapon; pendingWeapon = null; showWeapon(w); }
+      else nextQuestion();
+    }, correct ? 900 : 2000);
+  }
+
+  /* ================= end + report ================= */
+  function endQuiz(endedEarly) {
+    clearInterval(tick);
+    paused = false;
+    const minsPlayed = Math.max(0, Math.round((SESSION_SECS - Math.max(0, secsLeft)) / 6) / 10);
+    secsLeft = 0;   // stops any queued next-question callbacks
+    CATS.forEach(c => S.levels[c] = catLv[c]);
+    if (score > (S.best || 0)) S.best = score;
+    const todayStr = new Date().toDateString();
+    if (S.days.last !== todayStr) {
+      const yesterday = new Date(Date.now() - 864e5).toDateString();
+      S.days.streak = (S.days.last === yesterday) ? (S.days.streak || 0) + 1 : 1;
+      S.days.last = todayStr;
+    }
+    const now = new Date();
+    const acc = asked ? Math.round(hit / asked * 100) : 0;
+    S.history.push({ date: now.getDate() + '/' + (now.getMonth() + 1), score: score, hit: hit, asked: asked });
+    if (S.history.length > 60) S.history = S.history.slice(-60);
+    localSave();
+
+    const session = {
+      score: score, hit: hit, asked: asked, acc: acc,
+      finished: endedEarly ? 'Boxed early — ' + minsPlayed + ' min' : 'Full 10 minutes',
+      levels: CATS.map(c => c + ':' + catLv[c]).join(' '),
+      skills: CATS.map(c => c + ' ' + (stats[c].asked ? Math.round(stats[c].correct / stats[c].asked * 100) + '%' : '-')).join(' | '),
+      weapons: S.weapons.length
+    };
+    setSync('r-sync', hasCloud ? 'Backing up…' : 'Saved on this phone');
+    cloudPush(session);
+
+    $('r-score').textContent = score;
+    $('r-hit').textContent = hit + '/' + asked;
+    $('r-acc').textContent = acc + '%';
+    $('r-streakbest').textContent = bestStreak;
+    const justRanked = S.history.length === 3;
+    $('r-headline').textContent =
+      justRanked ? '🏆 SOUNDCHECK DONE! The tour starts tomorrow.' :
+      acc >= 85 ? 'Sold out, Zoe! ⭐' :
+      acc >= 65 ? 'Solid show. Better every set!' :
+      asked === 0 ? 'The clock beat you tonight — rematch tomorrow!' :
+      'Tough show — every superstar has one. Back tomorrow.';
+
+    const box = $('r-cats');
+    box.innerHTML = '';
+    let bestCat = null, worstCat = null, bestAcc = -1, worstAcc = 2;
+    CATS.forEach(c => {
+      const st = stats[c];
+      if (!st.asked) return;
+      const a = st.correct / st.asked;
+      if (a > bestAcc) { bestAcc = a; bestCat = c; }
+      if (a < worstAcc) { worstAcc = a; worstCat = c; }
+      const row = document.createElement('div');
+      row.className = 'cat-row';
+      const pctN = Math.round(a * 100);
+      // scoreboard colours: blue = flying, green = solid, gold = needs work
+      const barCol = a >= 0.85 ? 'background:var(--cyan);' : a >= 0.6 ? '' : 'background:var(--amber);';
+      row.innerHTML = '<div class="name">' + c + ' <span style="color:var(--cream-dim);font-size:.8em;">Lv ' + catLv[c] + '</span></div>'
+        + '<div class="bar"><i style="width:' + pctN + '%;' + barCol + '"></i></div>'
+        + '<div class="pct">' + pctN + '%</div>';
+      box.appendChild(row);
+    });
+    const coach = $('r-coach');
+    if (asked === 0) {
+      coach.innerHTML = 'No questions answered this show. Just hit showtime and have a crack — ten minutes goes fast!';
+    } else if (justRanked) {
+      coach.innerHTML = '<span class="eyebrow">Manager’s note</span><br>Soundcheck done — Zoe’s starting levels are locked in above. From tomorrow the tour starts: extra turns on the weak skills, with backstage tips when one fights back.';
+    } else if (newWeaponsTonight > 0) {
+      coach.innerHTML = '<span class="eyebrow">Manager’s note</span><br>' + newWeaponsTonight + ' new backstage tip' + (newWeaponsTonight > 1 ? 's' : '') + ' tonight — check &#127915; Backstage Pass on the home screen and use ' + (newWeaponsTonight > 1 ? 'them' : 'it') + ' tomorrow.';
+    } else if (bestCat && worstCat && bestCat !== worstCat && worstAcc < 0.7) {
+      coach.innerHTML = '<span class="eyebrow">Manager’s note</span><br><b>' + bestCat + '</b> was the strongest tonight. <b>' + worstCat + '</b> needs more turns — the game will serve extra ones next time automatically.';
+    } else {
+      coach.innerHTML = '<span class="eyebrow">Manager’s note</span><br>Steady across every skill. The maths gets a little harder as Zoe does — that’s how superstars are made.';
+    }
+    show('scr-report');
+  }
+
+  /* ================= wiring ================= */
+  $('btn-start').addEventListener('click', () => { if (audioCtx === null && soundOn) beep(1, .01); startQuiz(); });
+  $('btn-end').addEventListener('click', () => endQuiz(true));
+  $('btn-again').addEventListener('click', () => { paintStart(); show('scr-start'); });
+  $('btn-book').addEventListener('click', () => { paintBook(); show('scr-book'); });
+  $('btn-book-back').addEventListener('click', () => { paintStart(); show('scr-start'); });
+  $('btn-sound').addEventListener('click', () => {
+    soundOn = !soundOn;
+    try { localStorage.setItem('zoe-sound', soundOn ? 'on' : 'off'); } catch (e) {}
+    $('btn-sound').textContent = 'Sound: ' + (soundOn ? 'ON' : 'OFF');
+  });
+
+  /* ================= boot ================= */
+  S = localLoad();
+  paintStart();
+  if (hasCloud) {
+    setSync('sync-chip', 'Checking for saved progress…');
+    cloudPull(ok => {
+      setSync('sync-chip',
+        ok ? '☁ Synced — progress saved' : 'Playing offline — progress saved on this phone',
+        ok);
+      paintStart();
+    });
+  } else {
+    setSync('sync-chip', 'Progress saves on this phone');
+  }
+})();
+</script>
