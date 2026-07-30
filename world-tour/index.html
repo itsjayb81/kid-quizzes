@@ -1,4 +1,3 @@
-<!DOCTYPE html>
 <meta charset="utf-8">
 <title>Zoe&rsquo;s World Tour</title>
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
@@ -600,34 +599,58 @@
   const sndLevel = () => { beep(523, .1, 'sine'); beep(659, .1, 'sine', .1); beep(784, .2, 'sine', .2); };
 
   /* ================= categories & levels =================
-     Year 5 (AU Curriculum v9). Level 1-2 = end of Year 4, so night one is a win.
-     Level 3-5 = Year 5 proper. Level 6-8 = stretch into Year 6.
+     Zoe is in Year 5. Re-floored 30 Jul 2026 against her actual school report
+     (see TEACHER-BRIEF.md), which came back: Number 3, Measurement 3, Space 4,
+     Statistics 4, Probability 5, Algebra not assessed.
+
+     So the ladder deliberately sits ONE RUNG LOWER than a stock Year 5 build:
+       quiz LV 1-2  =  Victorian Curriculum Level 3   <- where she actually is
+       quiz LV 3-5  =  Victorian Curriculum Level 4
+       quiz LV 6-8  =  Victorian Curriculum Level 5   <- her year level, the target
+     The first build started at end-of-Year-4, which for a child testing at Level 3
+     made night one a loss. Night one has to be a win. That is the whole point.
   */
-  const CATS = ['Times tables', 'Division', 'Add & subtract', 'Fractions', 'Decimals', 'Word problems'];
+  const CATS = ['Times tables', 'Division', 'Add & subtract', 'Fractions',
+                'Money & decimals', 'Time', 'Length, mass & litres',
+                'Perimeter & area', 'Word problems', 'Chance'];
+
+  /* Share of the nightly 10, taken straight off the report. Number and
+     Measurement carry the load because both came back at Level 3. Chance is
+     deliberately light: Probability is her ONE at-level strand, so it is there
+     as a confidence win, not as something to drill. */
+  const BASE_W = {
+    'Times tables': 2, 'Division': 1, 'Add & subtract': 1, 'Fractions': 1,
+    'Money & decimals': 1, 'Time': 1, 'Length, mass & litres': 1,
+    'Perimeter & area': 1, 'Word problems': 1, 'Chance': 0.5
+  };
 
   const gen = {};
 
   gen['Times tables'] = function (lv) {
     let a, b;
-    if (lv <= 1) { a = pick([2, 3, 4, 5, 10]); b = ri(2, 9); }
-    else if (lv === 2) { a = pick([3, 4, 6, 7, 8, 9]); b = ri(2, 9); }
-    else if (lv === 3) { a = ri(2, 10); b = ri(2, 10); }
-    else if (lv === 4) { a = ri(2, 12); b = ri(3, 9); }
-    else if (lv === 5) { a = ri(12, 29); b = ri(2, 5); }        // 2-digit x small
-    else if (lv === 6) { a = ri(13, 49); b = ri(3, 7); }
-    else if (lv === 7) { a = ri(11, 25); b = ri(11, 19); }      // 2-digit x 2-digit
-    else { a = ri(15, 39); b = ri(12, 25); }
+    if (lv <= 1) { a = pick([2, 5, 10]); b = ri(2, 9); }            // VC L3 entry - the three easy tables
+    else if (lv === 2) { a = pick([2, 3, 4, 5, 10]); b = ri(2, 9); } // VC L3 proper (VC2M3N05)
+    else if (lv === 3) { a = pick([3, 4, 6, 7, 8, 9]); b = ri(2, 9); } // VC L4 (VC2M4N02)
+    else if (lv === 4) { a = ri(2, 10); b = ri(2, 10); }
+    else if (lv === 5) { a = ri(2, 12); b = ri(3, 9); }
+    else if (lv === 6) { a = ri(12, 29); b = ri(2, 5); }         // VC L5 (VC2M5N06) 2-digit x small
+    else if (lv === 7) { a = ri(13, 49); b = ri(3, 7); }
+    else { a = ri(11, 25); b = ri(11, 19); }                    // 2-digit x 2-digit
     return { text: a + ' \u00d7 ' + b + ' = ?', answer: a * b, type: 'numpad' };
   };
 
   gen['Division'] = function (lv) {
-    if (lv <= 2) { const b = pick(lv === 1 ? [2, 3, 4, 5, 10] : [3, 4, 6, 7, 8, 9]); const q = ri(2, 9); return { text: (b * q) + ' \u00f7 ' + b + ' = ?', answer: q, type: 'numpad' }; }
-    if (lv === 3) { const b = ri(2, 10); const q = ri(2, 10); return { text: (b * q) + ' \u00f7 ' + b + ' = ?', answer: q, type: 'numpad' }; }
-    if (lv === 4 || lv === 5) { // remainders
-      const b = ri(3, lv === 4 ? 6 : 9); const q = ri(3, 9); const r = ri(1, b - 1);
+    if (lv <= 3) {   // VC L3 -> L4: share evenly, no remainders yet
+      const b = pick(lv <= 1 ? [2, 5, 10] : lv === 2 ? [2, 3, 4, 5, 10] : [3, 4, 6, 7, 8, 9]);
+      const q = ri(2, 9);
+      return { text: (b * q) + ' \u00f7 ' + b + ' = ?', answer: q, type: 'numpad' };
+    }
+    if (lv === 4) { const b = ri(2, 10); const q = ri(2, 10); return { text: (b * q) + ' \u00f7 ' + b + ' = ?', answer: q, type: 'numpad' }; }
+    if (lv === 5 || lv === 6) { // remainders - VC L5 (VC2M5N07)
+      const b = ri(3, lv === 5 ? 6 : 9); const q = ri(3, 9); const r = ri(1, b - 1);
       return { text: (b * q + r) + ' \u00f7 ' + b + ' &mdash; what is the <u>remainder</u>?', answer: r, type: 'numpad', html: true };
     }
-    if (lv === 6) { const b = ri(3, 9); const q = ri(11, 25); return { text: (b * q) + ' \u00f7 ' + b + ' = ?', answer: q, type: 'numpad' }; }
+    if (lv === 7) { const b = ri(3, 9); const q = ri(11, 25); return { text: (b * q) + ' \u00f7 ' + b + ' = ?', answer: q, type: 'numpad' }; }
     const b = ri(4, 12); const q = ri(15, 40);
     return { text: (b * q) + ' \u00f7 ' + b + ' = ?', answer: q, type: 'numpad' };
   };
@@ -635,12 +658,13 @@
   gen['Add & subtract'] = function (lv) {
     const add = Math.random() < 0.5;
     let a, b;
-    if (lv <= 1) { a = ri(12, 89); b = ri(11, 89); }
-    else if (lv === 2) { a = ri(110, 899); b = ri(25, 99); }
-    else if (lv === 3) { a = ri(150, 950); b = ri(110, 850); }
-    else if (lv === 4) { a = ri(1100, 8900); b = ri(150, 990); }
-    else if (lv === 5) { a = ri(1200, 9800); b = ri(1100, 8800); }
-    else if (lv === 6) { a = ri(12000, 89000); b = ri(1500, 9900); }
+    if (lv <= 1) { a = ri(11, 49); b = ri(11, 49); }              // VC L3 entry - inside 100
+    else if (lv === 2) { a = ri(12, 89); b = ri(11, 89); }
+    else if (lv === 3) { a = ri(110, 899); b = ri(25, 99); }       // VC L3 3-digit (VC2M3N04)
+    else if (lv === 4) { a = ri(150, 950); b = ri(110, 850); }
+    else if (lv === 5) { a = ri(1100, 8900); b = ri(150, 990); }
+    else if (lv === 6) { a = ri(1200, 9800); b = ri(1100, 8800); } // VC L5 multi-digit
+    else if (lv === 7) { a = ri(12000, 89000); b = ri(1500, 9900); }
     else { a = ri(15000, 98000); b = ri(11000, 88000); }
     if (add) return { text: a + ' + ' + b + ' = ?', answer: a + b, type: 'numpad' };
     const hi = Math.max(a, b), lo = Math.min(a, b);
@@ -648,16 +672,21 @@
   };
 
   gen['Fractions'] = function (lv) {
-    if (lv <= 2) {
-      if (Math.random() < 0.5) {
-        const d = pick(lv === 1 ? [2, 4] : [2, 3, 4, 5]);
-        const whole = d * ri(2, lv === 1 ? 6 : 9);
+    if (lv === 1) {   // unit fractions, halves and quarters only - VC L3 (VC2M3N03)
+      const d = pick([2, 4]);
+      const whole = d * ri(2, 6);
+      return { text: 'What is 1/' + d + ' of ' + whole + '?', answer: whole / d, type: 'numpad' };
+    }
+    if (lv === 2) {   // unit fractions widened, plus the 1/2 equivalence
+      if (Math.random() < 0.6) {
+        const d = pick([2, 3, 4, 5]);
+        const whole = d * ri(2, 9);
         return { text: 'What is 1/' + d + ' of ' + whole + '?', answer: whole / d, type: 'numpad' };
       }
       const k = ri(2, 5);
       const right = k + '/' + (2 * k);
-      const wrongs = shuffle([(k) + '/' + (2 * k + 1), (k + 1) + '/' + (2 * k), k + '/' + (3 * k)]).slice(0, 3);
-      return { text: 'Which fraction equals 1/2?', answer: right, type: 'choice', choices: shuffle([right].concat(wrongs)) };
+      const wrongs = [(k) + '/' + (2 * k + 1), (k + 1) + '/' + (2 * k), k + '/' + (3 * k)];
+      return { text: 'Which fraction equals 1/2?', answer: right, type: 'choice', choices: choiceSet(right, wrongs, 4) };
     }
     if (lv === 3) { // compare same denominator
       const d = pick([5, 6, 8, 10, 12]);
@@ -666,10 +695,18 @@
       const big = Math.max(n1, n2) + '/' + d, small = Math.min(n1, n2) + '/' + d;
       return { text: 'Which is bigger?', answer: big, type: 'choice', choices: shuffle([big, small]) };
     }
-    if (lv === 4) { // add same denominator (answer stays proper)
-      const d = pick([5, 6, 8, 10, 12]);
-      const n1 = ri(1, d - 3), n2 = ri(1, d - 1 - n1);
-      const sum = n1 + n2;
+    if (lv === 5) { // add same denominator (answer stays proper)
+      /* The sum has to land in lowest terms. 4/12 + 6/12 = 10/12 was being offered
+         with 10/12 as the only correct option - a child who correctly simplified to
+         5/6 would hunt for it, not find it, and be marked wrong for being right.
+         Caught 30 Jul 2026 once the test harness's arithmetic checks were revived. */
+      let d, n1, n2, sum, guard = 0;
+      do {
+        d = pick([5, 6, 8, 10, 12]);
+        n1 = ri(1, d - 3); n2 = ri(1, d - 1 - n1);
+        sum = n1 + n2;
+      } while (gcd(sum, d) !== 1 && ++guard < 40);
+      if (gcd(sum, d) !== 1) { d = 5; n1 = 1; n2 = 2; sum = 3; }   // always-safe fallback
       const right = sum + '/' + d;
       // The classic wrong moves: adding the bottoms too, an off-by-one, and timesing
       // instead of adding. Any of those can collide with each other (2+3 and 2×3 sit
@@ -678,7 +715,7 @@
                       (sum - 1) + '/' + d, sum + '/' + (d + 1)];
       return { text: n1 + '/' + d + ' + ' + n2 + '/' + d + ' = ?', answer: right, type: 'choice', choices: choiceSet(right, wrongs, 4) };
     }
-    if (lv === 5) { // equivalent fractions general
+    if (lv === 4) { // equivalent fractions general - VC L4 (VC2M4N03)
       const bases = [[1, 3], [2, 3], [1, 4], [3, 4], [2, 5], [3, 5]];
       const [n, d] = pick(bases); const k = ri(2, 4);
       const right = (n * k) + '/' + (d * k);
@@ -689,35 +726,243 @@
       const d = pick([3, 4, 5, 8]); const n = ri(1, d - 1); const whole = d * ri(3, 9);
       return { text: 'What is ' + n + '/' + d + ' of ' + whole + '?', answer: whole / d * n, type: 'numpad' };
     }
-    // lv 7-8: simplify
-    const bases = [[1, 2], [1, 3], [2, 3], [1, 4], [3, 4], [2, 5], [3, 5], [4, 5], [5, 6]];
-    const [n, d] = pick(bases); const k = ri(2, 6);
-    const right = n + '/' + d;
-    const wrongs = shuffle([(n + 1) + '/' + d, n + '/' + (d + 1), (n + 1) + '/' + (d + 2)]);
-    return { text: 'Simplify ' + (n * k) + '/' + (d * k), answer: right, type: 'choice', choices: shuffle([right].concat(wrongs)) };
+    if (lv === 7) { // simplify
+      const bases = [[1, 2], [1, 3], [2, 3], [1, 4], [3, 4], [2, 5], [3, 5], [4, 5], [5, 6]];
+      const [n, d] = pick(bases); const k = ri(2, 6);
+      const right = n + '/' + d;
+      const wrongs = [(n + 1) + '/' + d, n + '/' + (d + 1), (n + 1) + '/' + (d + 2)];
+      return { text: 'Simplify ' + (n * k) + '/' + (d * k), answer: right, type: 'choice', choices: choiceSet(right, wrongs, 4) };
+    }
+    /* lv 8 - add fractions with RELATED denominators, VC L5 (VC2M5N05).
+       Every pair below is chosen so the answer is already in lowest terms. If it
+       weren't, a sharp kid would hunt for the simplified version, not find it in
+       the options, and get marked wrong for being right. */
+    const pairs = [[1, 2, 1, 4, 3, 4], [1, 2, 1, 8, 5, 8], [1, 4, 1, 8, 3, 8],
+                   [1, 5, 1, 10, 3, 10], [1, 4, 3, 8, 5, 8], [1, 3, 1, 9, 4, 9],
+                   [1, 2, 1, 12, 7, 12], [1, 3, 2, 9, 5, 9], [2, 3, 1, 6, 5, 6],
+                   [3, 4, 1, 8, 7, 8], [3, 5, 1, 10, 7, 10]];
+    const p = pick(pairs);
+    const right = p[4] + '/' + p[5];
+    const wrongs = [(p[0] + p[2]) + '/' + (p[1] + p[3]),   // added the bottoms too
+                    (p[0] + p[2]) + '/' + p[5],             // forgot to convert the top
+                    (p[4] + 1) + '/' + p[5],
+                    p[4] + '/' + (p[5] + 1),
+                    (p[4] - 1) + '/' + p[5]];
+    return { text: p[0] + '/' + p[1] + ' + ' + p[2] + '/' + p[3] + ' = ?', answer: right, type: 'choice', choices: choiceSet(right, wrongs, 4) };
   };
 
-  gen['Decimals'] = function (lv) {
+  /* Renamed from 'Decimals' on 30 Jul 2026. Decimals do not exist in the
+     Victorian Curriculum below Level 4 - tenths and hundredths arrive at
+     VC2M4N01. Zoe tested at Level 3 in Number, where the money skill is
+     VC2M3N07 (dollars and cents). So LV 1-2 are coins, not 0.7 + 0.5. */
+  gen['Money & decimals'] = function (lv) {
     const fix = (x, dp) => parseFloat(x.toFixed(dp));
-    if (lv <= 2) { // compare tenths
+    if (lv === 1) { // add coins - VC L3 (VC2M3N07)
+      const a = pick([5, 10, 20, 50]), b = pick([5, 10, 20, 50]);
+      return { text: a + 'c + ' + b + 'c = ? cents', answer: a + b, type: 'numpad' };
+    }
+    if (lv === 2) { // dollars and cents, still whole cents
+      const d = ri(1, 4), c = pick([5, 10, 20, 25, 50, 75]);
+      return { text: 'How many cents is $' + d + '.' + String(c).padStart(2, '0') + '?', answer: d * 100 + c, type: 'numpad' };
+    }
+    if (lv === 3) { // compare tenths - VC L4 (VC2M4N01), decimals start HERE
       let a = ri(1, 9) / 10, b = ri(1, 9) / 10;
       while (b === a) b = ri(1, 9) / 10;
       const big = String(Math.max(a, b)), small = String(Math.min(a, b));
       return { text: 'Which is bigger?', answer: big, type: 'choice', choices: shuffle([big, small]) };
     }
-    if (lv === 3) { // compare trickier (0.7 vs 0.65)
+    if (lv === 4) { // compare trickier (0.7 vs 0.65)
       const a = ri(2, 9) / 10;
       let b = fix(a - 0.05 + (Math.random() < 0.5 ? -ri(1, 20) / 100 : ri(1, 4) / 100), 2);
       if (b <= 0 || b === a) b = fix(a - 0.07, 2);
       const big = String(Math.max(a, b)), small = String(Math.min(a, b));
       return { text: 'Which is bigger?', answer: big, type: 'choice', choices: shuffle([big, small]) };
     }
-    if (lv === 4) { const a = ri(1, 9) / 10, b = ri(1, 9) / 10; return { text: a + ' + ' + b + ' = ?', answer: fix(a + b, 1), type: 'numpad' }; }
-    if (lv === 5) { const a = ri(11, 99) / 10, b = ri(11, 99) / 10; return { text: a + ' + ' + b + ' = ?', answer: fix(a + b, 1), type: 'numpad' }; }
-    if (lv === 6) { const a = ri(11, 99) / 100, b = ri(11, 99) / 100; return { text: a + ' + ' + b + ' = ?', answer: fix(a + b, 2), type: 'numpad' }; }
-    if (lv === 7) { const a = ri(101, 999) / 100, b = ri(11, 99) / 10; const hi = Math.max(a, b), lo = Math.min(a, b); return { text: hi + ' \u2212 ' + lo + ' = ?', answer: fix(hi - lo, 2), type: 'numpad' }; }
-    const a = ri(1, 9) / 10; const m = ri(2, 9);
-    return { text: a + ' \u00d7 ' + m + ' = ?', answer: fix(a * m, 1), type: 'numpad' };
+    if (lv === 5) { const a = ri(1, 9) / 10, b = ri(1, 9) / 10; return { text: a + ' + ' + b + ' = ?', answer: fix(a + b, 1), type: 'numpad' }; }
+    if (lv === 6) { const a = ri(11, 99) / 10, b = ri(11, 99) / 10; return { text: a + ' + ' + b + ' = ?', answer: fix(a + b, 1), type: 'numpad' }; }
+    if (lv === 7) { const a = ri(11, 99) / 100, b = ri(11, 99) / 100; return { text: a + ' + ' + b + ' = ?', answer: fix(a + b, 2), type: 'numpad' }; }
+    const a = ri(101, 999) / 100, b = ri(11, 99) / 10;
+    const hi = Math.max(a, b), lo = Math.min(a, b);
+    return { text: hi + ' \u2212 ' + lo + ' = ?', answer: fix(hi - lo, 2), type: 'numpad' };
+  };
+
+  /* ================= MEASUREMENT =================
+     All three skills below are NEW as of 30 Jul 2026. Zoe's report came back at
+     Level 3 in Measurement - equal-weakest with Number - and the first build had
+     no measurement questions in it at all. This is the actual gap. */
+
+  const pad2 = n => String(n).padStart(2, '0');
+
+  /* A drawn clock face. Reading an analog clock IS the Level 3 skill she is
+     missing (VC2M3M04), and it cannot be asked in words - a sentence like
+     "the short hand is on 4" does the reading FOR her. Uses the page's own
+     stage-light colours so it looks like it belongs. */
+  function clockSVG(h, m) {
+    const rad = d => d * Math.PI / 180;
+    const hAng = ((h % 12) + m / 60) * 30 - 90, mAng = m * 6 - 90;
+    const hx = 60 + Math.cos(rad(hAng)) * 26, hy = 60 + Math.sin(rad(hAng)) * 26;
+    const mx = 60 + Math.cos(rad(mAng)) * 40, my = 60 + Math.sin(rad(mAng)) * 40;
+    let face = '';
+    for (let i = 0; i < 12; i++) {
+      const a = rad(i * 30 - 90);
+      face += '<circle cx="' + (60 + Math.cos(a) * 47).toFixed(1) + '" cy="' + (60 + Math.sin(a) * 47).toFixed(1) + '" r="1.8" fill="var(--cream-dim)"/>';
+      face += '<text x="' + (60 + Math.cos(a) * 36).toFixed(1) + '" y="' + (60 + Math.sin(a) * 36 + 4.5).toFixed(1) +
+              '" font-size="12" font-weight="700" fill="var(--cream)" text-anchor="middle">' + (i === 0 ? 12 : i) + '</text>';
+    }
+    return '<svg viewBox="0 0 120 120" width="164" height="164" role="img" aria-label="a clock face" style="display:block;margin:0 auto 12px">' +
+      '<circle cx="60" cy="60" r="55" fill="rgba(255,255,255,.05)" stroke="var(--cream-dim)" stroke-width="2"/>' + face +
+      '<line x1="60" y1="60" x2="' + hx.toFixed(1) + '" y2="' + hy.toFixed(1) + '" stroke="var(--cream)" stroke-width="6" stroke-linecap="round"/>' +
+      '<line x1="60" y1="60" x2="' + mx.toFixed(1) + '" y2="' + my.toFixed(1) + '" stroke="var(--neon)" stroke-width="3.5" stroke-linecap="round"/>' +
+      '<circle cx="60" cy="60" r="4" fill="var(--neon)"/></svg>';
+  }
+
+  gen['Time'] = function (lv) {
+    if (lv <= 3) {   // read the clock - VC L3 (VC2M3M04)
+      const h = ri(1, 12);
+      const m = lv === 1 ? pick([0, 30]) : lv === 2 ? pick([0, 15, 30, 45]) : ri(0, 11) * 5;
+      const right = h + ':' + pad2(m);
+      const wrongs = [(h === 12 ? 1 : h + 1) + ':' + pad2(m),
+                      h + ':' + pad2((m + 30) % 60),
+                      h + ':' + pad2((m + 15) % 60),
+                      (h === 1 ? 12 : h - 1) + ':' + pad2(m),
+                      h + ':' + pad2((m + 45) % 60)];
+      return { text: clockSVG(h, m) + 'What time is this clock showing?', answer: right,
+               type: 'choice', choices: choiceSet(right, wrongs, 4), html: true, small: true };
+    }
+    if (lv === 4) {   // duration inside one hour - VC L3 (VC2M3M03)
+      const h = ri(1, 11), s = ri(0, 5) * 5, e = s + ri(1, (55 - s) / 5) * 5;
+      return { text: 'A song starts at ' + h + ':' + pad2(s) + ' and ends at ' + h + ':' + pad2(e) + '.\nHow many minutes long is it?',
+               answer: e - s, type: 'numpad', small: true };
+    }
+    if (lv === 5) {   // duration ACROSS the hour - the bit that trips kids up
+      const h = ri(1, 11), s = ri(9, 11) * 5, add = ri(3, 9) * 5, tot = s + add;
+      return { text: 'The show starts at ' + h + ':' + pad2(s) + ' and finishes at ' + (h + Math.floor(tot / 60)) + ':' + pad2(tot % 60) + '.\nHow many minutes long is it?',
+               answer: add, type: 'numpad', small: true };
+    }
+    if (lv === 6) {   // am/pm and hours->minutes - VC L4 (VC2M4M03)
+      if (Math.random() < 0.5) { const hh = ri(2, 9); return { text: 'How many minutes in ' + hh + ' hours?', answer: hh * 60, type: 'numpad' }; }
+      const hh = ri(1, 11);
+      const right = (hh + 12) + ':00';
+      const wrongs = [pad2(hh) + ':00', (hh + 12) + ':30', (hh + 11) + ':00', (hh + 12) + ':15'];
+      return { text: hh + ' pm in 24-hour time is...', answer: right, type: 'choice', choices: choiceSet(right, wrongs, 4) };
+    }
+    if (lv === 7) {   // 12 -> 24 hour with minutes - VC L5 (VC2M5M03)
+      const hh = ri(1, 11), mm = ri(1, 11) * 5;
+      const right = (hh + 12) + ':' + pad2(mm);
+      const wrongs = [pad2(hh) + ':' + pad2(mm), (hh + 12) + ':' + pad2((mm + 30) % 60),
+                      (hh + 11) + ':' + pad2(mm), (hh + 12) + ':' + pad2((mm + 15) % 60)];
+      return { text: hh + ':' + pad2(mm) + ' pm in 24-hour time is...', answer: right, type: 'choice', choices: choiceSet(right, wrongs, 4) };
+    }
+    // lv 8 - back the other way, 24 -> 12 hour
+    const h24 = ri(14, 22), mm = ri(1, 11) * 5;
+    const right = (h24 - 12) + ':' + pad2(mm) + ' pm';
+    const wrongs = [(h24 - 12) + ':' + pad2(mm) + ' am', (h24 - 11) + ':' + pad2(mm) + ' pm',
+                    (h24 - 12) + ':' + pad2((mm + 30) % 60) + ' pm', (h24 - 13) + ':' + pad2(mm) + ' pm'];
+    return { text: h24 + ':' + pad2(mm) + ' in 12-hour time is...', answer: right, type: 'choice', choices: choiceSet(right, wrongs, 4) };
+  };
+
+  gen['Length, mass & litres'] = function (lv) {
+    if (lv <= 2) {   // pick the right unit - VC L3 (VC2M3M01)
+      /* Distractors are hand-picked per item, not drawn from the whole pool.
+         Random distractors kept offering mm against cm for a pencil, where both
+         are defensible - and a question with two right answers teaches nothing. */
+      const items = lv === 1 ? [
+        ['a pencil', 'cm', ['km', 'kg', 'L']],
+        ['the height of a door', 'm', ['mm', 'g', 'mL']],
+        ['the drive from Doreen to the city', 'km', ['cm', 'g', 'mL']],
+        ['a bag of potatoes', 'kg', ['km', 'mL', 'cm']],
+        ['a dose of medicine', 'mL', ['m', 'kg', 'km']]
+      ] : [
+        ['an ant', 'mm', ['m', 'km', 'kg']],
+        ['a netball court', 'm', ['mm', 'g', 'mL']],
+        ['a feather', 'g', ['kg', 'km', 'L']],
+        ['a full bathtub', 'L', ['mL', 'cm', 'g']],
+        ['a teaspoon of sugar', 'g', ['kg', 'km', 'L']],
+        ['a marathon', 'km', ['cm', 'mm', 'g']],
+        ['a phone screen', 'cm', ['km', 'kg', 'L']]
+      ];
+      const it = pick(items);
+      return { text: 'Which unit would you use to measure ' + it[0] + '?', answer: it[1],
+               type: 'choice', choices: choiceSet(it[1], shuffle(it[2]), 4) };
+    }
+    if (lv === 3) { const o = pick([['cm', 'mm', 10], ['m', 'cm', 100]]); const n = ri(2, 9); return { text: n + ' ' + o[0] + ' = ? ' + o[1], answer: n * o[2], type: 'numpad' }; }
+    if (lv === 4) { const o = pick([['kg', 'g', 1000], ['L', 'mL', 1000], ['km', 'm', 1000]]); const n = ri(2, 9); return { text: n + ' ' + o[0] + ' = ? ' + o[1], answer: n * o[2], type: 'numpad' }; }
+    if (lv === 5) { const o = pick([['m', 'cm', 100], ['kg', 'g', 1000], ['L', 'mL', 1000]]); const n = ri(11, 49) / 10; return { text: n + ' ' + o[0] + ' = ? ' + o[1], answer: Math.round(n * o[2]), type: 'numpad' }; }
+    if (lv === 6) {   // combine two units - VC L5 (VC2M5M01)
+      if (Math.random() < 0.5) { const m = ri(1, 5), c = ri(1, 9) * 10; return { text: m + ' m ' + c + ' cm = ? cm', answer: m * 100 + c, type: 'numpad' }; }
+      const k = ri(1, 5), g = ri(1, 9) * 100; return { text: k + ' kg ' + g + ' g = ? g', answer: k * 1000 + g, type: 'numpad' };
+    }
+    if (lv === 7) {   // back the other way, answer is a decimal
+      const o = pick([['g', 'kg', 1000, 100], ['mL', 'L', 1000, 100], ['cm', 'm', 100, 10]]);
+      const n = ri(11, 99) * o[3];
+      return { text: n + ' ' + o[0] + ' = ? ' + o[1], answer: parseFloat((n / o[2]).toFixed(2)), type: 'numpad' };
+    }
+    // lv 8 - add two measurements given in different units
+    const o = pick([['m', 'cm', 100], ['kg', 'g', 1000], ['L', 'mL', 1000]]);
+    const a = ri(1, 5), b = ri(1, 9) * (o[2] / 10);
+    return { text: a + ' ' + o[0] + ' + ' + b + ' ' + o[1] + ' = ? ' + o[1], answer: a * o[2] + b, type: 'numpad' };
+  };
+
+  gen['Perimeter & area'] = function (lv) {
+    if (lv === 1) { const s = ri(2, 9); return { text: 'A square has sides of ' + s + ' cm.\nWhat is its perimeter?', answer: s * 4, type: 'numpad', small: true }; }
+    if (lv === 2) { const w = ri(2, 9), h = ri(2, 9); return { text: 'A rectangle is ' + w + ' cm wide and ' + h + ' cm tall.\nWhat is its perimeter?', answer: 2 * (w + h), type: 'numpad', small: true }; }
+    if (lv === 3) { const s = ri(2, 9); return { text: 'A square has sides of ' + s + ' cm.\nWhat is its area in square cm?', answer: s * s, type: 'numpad', small: true }; }
+    if (lv === 4) { const w = ri(2, 9), h = ri(2, 9); return { text: 'A rectangle is ' + w + ' cm by ' + h + ' cm.\nWhat is its area in square cm?', answer: w * h, type: 'numpad', small: true }; }
+    if (lv === 5) { const w = ri(3, 12), h = ri(3, 12); return { text: 'The stage is ' + w + ' m by ' + h + ' m.\nWhat is its area in square m?', answer: w * h, type: 'numpad', small: true }; }
+    if (lv === 6) { const w = ri(3, 9), a = w * ri(3, 12); return { text: 'A rectangle has an area of ' + a + ' square cm.\nOne side is ' + w + ' cm. How long is the other side?', answer: a / w, type: 'numpad', small: true }; }
+    if (lv === 7) { const w = ri(3, 12), h = ri(3, 12); return { text: 'A rectangle has a perimeter of ' + (2 * (w + h)) + ' cm.\nOne side is ' + w + ' cm. How long is the side next to it?', answer: h, type: 'numpad', small: true }; }
+    // lv 8 - L-shape, two rectangles added together
+    const a = ri(3, 8), b = ri(3, 8), c = ri(2, 6), d = ri(2, 6);
+    return { text: 'An L-shaped stage is two rectangles joined:\n' + a + ' m by ' + b + ' m, and ' + c + ' m by ' + d + ' m.\nWhat is the total area in square m?',
+             answer: a * b + c * d, type: 'numpad', small: true };
+  };
+
+  /* ================= PROBABILITY =================
+     Her ONE at-level strand (Level 5 on the report) and her only clear win, so it
+     is weighted light in BASE_W. This is here to end nights on a high, not to drill.
+     Probability does not exist below Level 3 in the curriculum at all. */
+  gen['Chance'] = function (lv) {
+    if (lv <= 2) {
+      const qs = [
+        ['The sun will come up tomorrow.', 'certain'],
+        ['A dropped ball will fall downwards.', 'certain'],
+        ['You roll a 7 on a normal 6-sided dice.', 'impossible'],
+        ['You pick a red ball from a bag holding only blue balls.', 'impossible'],
+        ['A flipped coin lands on heads.', 'even chance'],
+        ['You roll an even number on a dice.', 'even chance'],
+        ['You roll a 6 on a dice.', 'unlikely'],
+        ['You roll higher than 1 on a dice.', 'likely']
+      ];
+      const q = pick(qs);
+      const all = ['certain', 'likely', 'even chance', 'unlikely', 'impossible'];
+      return { text: q[0] + '\nHow likely is that?', answer: q[1], type: 'choice',
+               choices: choiceSet(q[1], shuffle(all.filter(x => x !== q[1])), 4), small: true };
+    }
+    if (lv === 3) {
+      const n = pick([6, 10, 12]);
+      return { text: 'A spinner has ' + n + ' equal sections, numbered 1 to ' + n + '.\nHow many sections show an EVEN number?', answer: n / 2, type: 'numpad', small: true };
+    }
+    if (lv === 4 || lv === 5) {   // chance as a fraction
+      const r = ri(1, 4), b = ri(2, 6), t = r + b;
+      const notRed = lv === 5;
+      const right = (notRed ? b : r) + '/' + t;
+      const wrongs = [(notRed ? r : b) + '/' + t, r + '/' + b, b + '/' + r,
+                      (notRed ? b + 1 : r + 1) + '/' + t, (notRed ? b : r) + '/' + (t + 1)];
+      return { text: 'A bag has ' + r + ' red and ' + b + ' blue marbles.\nWhat is the chance of ' + (notRed ? 'NOT picking red' : 'picking a red one') + '?',
+               answer: right, type: 'choice', choices: choiceSet(right, wrongs, 4), small: true };
+    }
+    if (lv === 6 || lv === 7) {   // chance as a percentage - links to VC2M5N04
+      const t = pick([4, 5, 10, 20]), n = ri(1, t - 1);
+      const not = lv === 7;
+      // Math.round, not the raw division: 11/20*100 comes out 55.00000000000001 in
+      // floating point, and the numpad would then never accept 55.
+      return { text: n + ' out of ' + t + ' tickets win a prize.\nWhat percentage do ' + (not ? 'NOT win' : 'win') + '?',
+               answer: Math.round((not ? t - n : n) / t * 100), type: 'numpad', small: true };
+    }
+    // lv 8 - expected number from a percentage
+    const t = pick([20, 40, 50, 60, 80, 100]), pc = pick([10, 20, 50]);
+    return { text: 'There is a ' + pc + '% chance of winning.\nOut of ' + t + ' goes, how many wins would you expect?',
+             answer: t * pc / 100, type: 'numpad', small: true };
   };
 
   /* ---- WORD PROBLEMS (tour + concert flavoured) ---- */
@@ -767,8 +1012,16 @@
     { id: 'frac-tops', cat: 'Fractions', title: 'Same Bottom? Add the Tops', body: '3/8 + 2/8: the bottoms match, so just add the tops. 3 + 2 = 5, answer 5/8. The bottom number NEVER changes.' },
     { id: 'frac-pizza', cat: 'Fractions', title: 'The Pizza Rule', body: '3/4 of 20? Cut the 20 into 4 equal slices: 20 \u00f7 4 = 5. You want 3 slices: 3 \u00d7 5 = 15. Divide by the bottom, times by the top.' },
     { id: 'frac-both', cat: 'Fractions', title: 'The Times-Both Trick', body: 'Fractions stay equal if you multiply the top AND bottom by the same number. 1/2 = 2/4 = 3/6 = 4/8. Same amount of pizza, just more slices.' },
-    { id: 'dec-money', cat: 'Decimals', title: 'Think Money', body: '0.7 + 0.5? Think coins: 70c + 50c = 120c = $1.20, so the answer is 1.2. Decimals are just dollars and cents in disguise.' },
-    { id: 'dec-dots', cat: 'Decimals', title: 'Line Up the Dots', body: 'Which is bigger, 0.7 or 0.65? Make them the same length: 0.70 vs 0.65. Now it\u2019s obvious \u2014 70 beats 65. Add a zero, compare like normal numbers.' },
+    { id: 'dec-money', cat: 'Money & decimals', title: 'Think Money', body: '0.7 + 0.5? Think coins: 70c + 50c = 120c = $1.20, so the answer is 1.2. Decimals are just dollars and cents in disguise.' },
+    { id: 'dec-dots', cat: 'Money & decimals', title: 'Line Up the Dots', body: 'Which is bigger, 0.7 or 0.65? Make them the same length: 0.70 vs 0.65. Now it\u2019s obvious \u2014 70 beats 65. Add a zero, compare like normal numbers.' },
+    { id: 'time-hands', cat: 'Time', title: 'Two Hands, Two Jobs', body: 'The SHORT fat hand tells you the hour \u2014 read the number it has just passed. The LONG pink hand tells you the minutes, and every number it points at is worth 5. Pointing at 3? That\u2019s 15 minutes.' },
+    { id: 'time-up', cat: 'Time', title: 'Climb to the Next Hour', body: '2:50 to 3:20? Don\u2019t subtract. Climb: 2:50 up to 3:00 is 10 minutes. 3:00 up to 3:20 is 20 more. 10 + 20 = 30 minutes. Always climb to the o\u2019clock first.' },
+    { id: 'time-24', cat: 'Time', title: 'Afternoon? Add 12', body: 'Any pm time in 24-hour clock: just add 12 to the hour. 3pm \u2192 3 + 12 = 15:00. 8:45pm \u2192 20:45. Going backwards, take 12 off: 19:30 is 7:30pm.' },
+    { id: 'unit-1000', cat: 'Length, mass & litres', title: 'The 1000 Club', body: 'Three of them all work the same: 1 km = 1000 m, 1 kg = 1000 g, 1 L = 1000 mL. Learn 1000 once and you\u2019ve learnt all three. Only cm and mm are different (1 cm = 10 mm, 1 m = 100 cm).' },
+    { id: 'unit-way', cat: 'Length, mass & litres', title: 'Big to Small? Times It', body: 'Going to a SMALLER unit means you need MORE of them, so multiply. 3 m \u2192 cm is 3 \u00d7 100 = 300. Going to a BIGGER unit means fewer, so divide. 2500 g \u2192 kg is 2500 \u00f7 1000 = 2.5.' },
+    { id: 'pa-fence', cat: 'Perimeter & area', title: 'Fence or Grass?', body: 'Perimeter is the FENCE \u2014 walk right around the edge and add up every side. Area is the GRASS \u2014 how much fills the inside. Fence: add. Grass: times.' },
+    { id: 'pa-times', cat: 'Perimeter & area', title: 'Area is Just Times Tables', body: 'Area of any rectangle = one side \u00d7 the other side. A 6 cm by 4 cm rectangle is 6 \u00d7 4 = 24 square cm. Picture 6 rows of 4 tiles \u2014 that\u2019s why it works.' },
+    { id: 'ch-fraction', cat: 'Chance', title: 'Chance is a Fraction', body: 'Top number = the ones you WANT. Bottom number = how many there are ALTOGETHER (not the leftovers). 3 red and 5 blue is 8 marbles, so red is 3/8 \u2014 never 3/5.' },
     { id: 'wp-detective', cat: 'Word problems', title: 'Be a Number Detective', body: 'Step 1: spot the numbers. Step 2: find the magic word \u2014 \u201caltogether\u201d or \u201ctotal\u201d means ADD or TIMES; \u201cleft\u201d, \u201cchange\u201d or \u201cgives away\u201d means SUBTRACT; \u201ceach\u201d or \u201cshare\u201d means DIVIDE. Step 3: do the maths.' }
   ];
 
@@ -876,7 +1129,9 @@
       if (c === lastCat) return;
       const st = stats[c];
       const acc = st.asked ? st.correct / st.asked : 1;
-      const weight = acc < 0.6 && st.asked >= 2 ? 3 : 1;   // struggling -> more reps
+      const boost = acc < 0.6 && st.asked >= 2 ? 3 : 1;    // struggling -> more reps
+      // x2 so the 0.5 weight on Chance survives as a whole number
+      const weight = Math.max(1, Math.round((BASE_W[c] || 1) * 2 * boost));
       for (let i = 0; i < weight; i++) pool.push(c);
     });
     return pick(pool);
