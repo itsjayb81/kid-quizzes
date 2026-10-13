@@ -1,0 +1,132 @@
+<!doctype html>
+<html lang="en-AU">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>Appret website check</title>
+<style>
+:root{--ink:#222;--line:#d9d2c8;--yes:#1f7a3d;--no:#8a2b2b;--bg:#faf7f2}
+*{box-sizing:border-box}
+body{margin:0;font:18px/1.4 Arial,Helvetica,sans-serif;color:var(--ink);background:var(--bg)}
+.wrap{max-width:640px;margin:0 auto;padding:16px}
+h1{font-size:26px;margin:6px 0 4px}
+h2{font-size:21px;margin:30px 0 4px;padding-bottom:5px;border-bottom:3px solid var(--ink)}
+.s{font-size:16px;color:#555;margin:2px 0 10px}
+.intro{background:#fff;border:2px solid var(--ink);border-radius:10px;padding:12px 14px;margin:10px 0}
+.row{background:#fff;border:1px solid var(--line);border-radius:10px;padding:12px 14px;margin:10px 0}
+.row b{display:block;font-size:19px}
+.row .note{font-size:15px;color:#555;margin:3px 0 10px}
+.btns{display:flex;gap:10px}
+.btns button{flex:1;font:600 17px Arial;padding:13px 6px;border-radius:8px;border:2px solid #aaa;background:#fff;color:#333}
+.btns button.y.on{background:var(--yes);border-color:var(--yes);color:#fff}
+.btns button.n.on{background:var(--no);border-color:var(--no);color:#fff}
+.send{position:sticky;bottom:0;background:var(--bg);padding:8px 0 10px;border-top:2px solid var(--ink);margin-top:26px}
+.send button{width:100%;font:700 18px Arial;padding:12px;border-radius:10px;border:0;background:#25a244;color:#fff}
+.send .c{margin-top:6px;background:#fff;color:#222;border:2px solid #888;font-size:15px;padding:8px}
+#cnt{font-weight:bold;margin-bottom:6px;font-size:16px}
+</style>
+</head>
+<body><div class="wrap">
+<h1>Appret website check</h1>
+<p class="s">From Jay. Checked 13 Oct 2026 against your new printed menu.</p>
+<div class="intro">
+<b>How this works</b><br>
+Tap <b>Yes</b> to have it changed, or <b>No</b> to leave it. When you are done, press the green button. It writes the message for you and you send it to Jay on WhatsApp.<br><br>
+<b>One thing to know:</b> the website and the till share the same Square list. Changing a price here changes it at the till too. Nothing gets changed until you say yes.
+</div>
+
+<h2>1. Take OFF the website</h2>
+<p class="s">These are on the website but not on your new printed menu.</p>
+<div id="g1"></div>
+
+<h2>2. Put ON the website</h2>
+<p class="s">On your print, but customers cannot order them online today.</p>
+<div id="g2"></div>
+
+<h2>3. Fix the price or name</h2>
+<div id="g3"></div>
+
+<h2>4. Still selling these?</h2>
+<p class="s">Not on the table menu, so we are not sure. Yes means keep it on the website.</p>
+<div id="g4"></div>
+
+<div class="send">
+<div id="cnt"></div>
+<button id="wa">Send my answers to Jay on WhatsApp</button>
+<button class="c" id="cp">Copy the message instead</button>
+</div>
+</div>
+<script>
+var G={
+g1:[
+["Chicken Poke Bowl","$25.50 on the website","Take off"],
+["Salmon Poke Bowl","$25.50 on the website","Take off"],
+["Caesar Salad","$15.50 on the website","Take off"],
+["Lunchtime Schnitz","$19.50 on the website","Take off"],
+["Roastie","$19.90 on the website","Take off"],
+["BBQ Bacon Beef Burger","$16.90 on the website","Take off"],
+["Brisket Burger","$15.50 on the website. Brisket is on the print as a toastie.","Take off"],
+["Grilled Chicken Burger","$15.50 on the website","Take off"],
+["Savoury Pancake","$17.50 on the website","Take off"],
+["Nutella Waffle","$17.50 on the website. Made to order?","Take off"],
+["Salted Caramel Waffle","$17.50 on the website. Made to order?","Take off"]],
+g2:[
+["Whole Kids Menu section","There is no Kids Menu tab on the website at all. The items are already in Square.","Put on"],
+["Gochujang Chicken Benny","$19.90, in Square but not online","Put on"],
+["Berry Bliss Waffle","$18.50, in Square but not online","Put on"],
+["Calamari Salad","$20.90 on the print. Square has it as Calamari.","Put on"],
+["Southern Crispy Chicken Tacos (3)","$20.90 on the print. Square has it as Chicken taco.","Put on"],
+["Loaded Potatoes","$17.50, in Square but not online","Put on"]],
+g3:[
+["B.L.A.T","Website $16.50. Print $17.50.","Change to $17.50"],
+["Grilled Chicken Avo Salad","Print calls it Grilled Chicken Salad, $21.50.","Rename it"],
+["Truffle Mushroom","Website has Mushroom and Cheese Toastie $15.00. Print says Truffle Mushroom $14.90.","Use the print"],
+["Kids Chicken Nuggets w Chips","Square $9.50. Print $10.50.","Change to $10.50"],
+["Kids Cheese Burger Meal","Square $11.90. Print $13.90.","Change to $13.90"],
+["Kids Bacon & Egg on Toast","Square has $10.90 and $12.50. Print $12.50.","Change to $12.50"]],
+g4:[
+["Pumpkin Soup","$15.50 on the website. Soups are specials.","Keep"],
+["Avo on Toast","$11.00","Keep"],
+["Bacon on Toast","$10.00","Keep"],
+["Banana Bread","$6.00","Keep"],
+["Toast","$7.50","Keep"],
+["Tradie Sandwich","$8.00","Keep"],
+["The plain toasties (cheese, ham, egg and similar)","Many on the website","Keep"]]
+};
+var A={};
+try{A=JSON.parse(localStorage.getItem('appretweb')||'{}')}catch(e){}
+function save(){try{localStorage.setItem('appretweb',JSON.stringify(A))}catch(e){}}
+function render(){
+ ['g1','g2','g3','g4'].forEach(function(g){
+  var box=document.getElementById(g);box.innerHTML='';
+  G[g].forEach(function(it,i){
+   var id=g+i,d=document.createElement('div');d.className='row';
+   d.innerHTML='<b></b><div class="note"></div><div class="btns"><button class="y"></button><button class="n"></button></div>';
+   d.querySelector('b').textContent=it[0];d.querySelector('.note').textContent=it[1];
+   var y=d.querySelector('button.y'),n=d.querySelector('button.n');
+   y.textContent='Yes: '+it[2];n.textContent='No, leave it';
+   if(A[id]==='y')y.className='y on';if(A[id]==='n')n.className='n on';
+   y.onclick=function(){A[id]='y';save();render()};n.onclick=function(){A[id]='n';save();render()};
+   box.appendChild(d);
+  });
+ });
+ var done=Object.keys(A).length,tot=0;for(var k in G)tot+=G[k].length;
+ document.getElementById('cnt').textContent=done+' of '+tot+' answered';
+}
+function msg(){
+ var out=['Appret website check, Sunita\'s answers:'];
+ var names={g1:'TAKE OFF',g2:'PUT ON',g3:'FIX',g4:'STILL SELLING'};
+ ['g1','g2','g3','g4'].forEach(function(g){
+  var ys=[],ns=[];
+  G[g].forEach(function(it,i){var a=A[g+i];if(a==='y')ys.push(it[0]);if(a==='n')ns.push(it[0]);});
+  if(ys.length)out.push(names[g]+' YES: '+ys.join(', '));
+  if(ns.length)out.push(names[g]+' NO (leave): '+ns.join(', '));
+ });
+ return out.join('\n');
+}
+document.getElementById('wa').onclick=function(){window.location.href='https://wa.me/?text='+encodeURIComponent(msg())};
+document.getElementById('cp').onclick=function(){var t=msg();try{navigator.clipboard.writeText(t).then(function(){alert('Copied. Paste it in WhatsApp to Jay.')},function(){prompt('Copy this:',t)})}catch(e){prompt('Copy this:',t)}};
+render();
+</script>
+</body></html>
