@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="en-AU">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>Appret Greensborough, quick questions</title>
+<style>
+:root{--ink:#222;--line:#d9d2c8;--on:#df571d;--bg:#efe8d4}
+*{box-sizing:border-box}
+body{margin:0;font:18px/1.4 Arial,Helvetica,sans-serif;color:var(--ink);background:var(--bg)}
+.wrap{max-width:640px;margin:0 auto;padding:16px}
+h1{font-size:26px;margin:6px 0 4px}
+.s{font-size:16px;color:#555;margin:2px 0 10px}
+.intro{background:#fff;border:2px solid var(--ink);border-radius:10px;padding:12px 14px;margin:10px 0}
+.q{background:#fff;border:1px solid var(--line);border-radius:10px;padding:12px 14px;margin:12px 0}
+.q b{display:block;font-size:19px}
+.q .note{font-size:15px;color:#555;margin:3px 0 10px}
+.opts{display:flex;gap:8px;flex-wrap:wrap}
+.opts button{flex:1 1 40%;font:600 17px Arial;padding:13px 8px;border-radius:8px;border:2px solid #aaa;background:#fff;color:#333}
+.opts button.on{background:var(--on);border-color:var(--on);color:#fff}
+.q input[type=text],.q textarea{width:100%;font:17px Arial;padding:10px;border:2px solid #aaa;border-radius:8px;margin-top:8px}
+.send{position:sticky;bottom:0;background:var(--bg);padding:8px 0 10px;border-top:2px solid var(--ink);margin-top:26px}
+.send button{width:100%;font:700 18px Arial;padding:12px;border-radius:10px;border:0;background:#25a244;color:#fff}
+.send .c{margin-top:6px;background:#fff;color:#222;border:2px solid #888;font-size:15px;padding:8px}
+#cnt{font-weight:bold;margin-bottom:6px;font-size:16px}
+</style>
+</head>
+<body><div class="wrap">
+<h1>Appret Greensborough</h1>
+<p class="s">From Jay. About 3 minutes. Tap an answer, or type if you want.</p>
+<div class="intro">
+<b>What this is for</b><br>
+Your Greensborough cafe has no website and the Google listing is out of date. These answers let us build both and get it found. When you are done, press the green button. It writes the message and you send it to Jay on WhatsApp.
+</div>
+<div id="qs"></div>
+<div class="send">
+<div id="cnt"></div>
+<button id="wa">Send my answers to Jay on WhatsApp</button>
+<button class="c" id="cp">Or copy the message</button>
+</div>
+</div>
+<script>
+var Q=[
+{id:"sign",t:"What does the sign out the front say?",n:"Google only accepts the name on the sign.",o:["Appret Cafe","Appret Cafe Greensborough","Something else"],txt:true},
+{id:"hours",t:"Which opening hours are right?",n:"Google says 7am to 4pm (Sunday 7:30 to 2:30). Instagram says 7am to 3pm.",o:["Google is right","Instagram is right","Neither, I will type"],txt:true},
+{id:"phone",t:"Which phone number should customers ring?",n:"Google has 0474 709 860. Instagram has 03 9717 9700.",o:["0474 709 860","03 9717 9700","Other"],txt:true},
+{id:"wifi",t:"Free Wi-Fi for customers?",o:["Yes","No"]},
+{id:"seats",t:"Outdoor seats?",o:["Yes","No"]},
+{id:"dogs",t:"Dogs allowed outside?",o:["Yes","No"]},
+{id:"park",t:"Is there easy street parking near the door?",o:["Yes","Not really"]},
+{id:"team",t:"Can we say 'Same Appret team as Doreen' on the website?",o:["Yes","No"]},
+{id:"best",t:"What do people buy most at Greensborough?",n:"Type your top 3 to 5. Coffee, cakes, toasties, anything.",o:[],txt:true},
+{id:"cakes",t:"Which cakes do you usually have?",n:"Names are fine. Leave blank if it changes daily.",o:[],txt:true},
+{id:"menu",t:"Is the Uber Eats menu for Greensborough right?",n:"It lists coffee, toasties, wraps, pies, gozleme, smoothies and juices.",o:["Yes, right","Mostly, I will tell Jay what is off","No, it needs a big fix"]},
+{id:"cater",t:"Do you do catering from Greensborough?",o:["Yes","No","Maybe later"]},
+{id:"insta",t:"The Instagram @appret_2.0: what should we do?",n:"It has 140 followers and 98 posts. Jay would post for you, you keep control.",o:["Jay takes it over","Start a new Greensborough one","Leave it, I run it"]},
+{id:"mgr",t:"Can you add Jay as a manager on the Greensborough Google profile?",n:"Jay will send the steps. It takes a minute and you stay the owner.",o:["Yes, I will do it","Send me the steps first"]},
+{id:"photos",t:"Can someone at Greensborough take about 10 photos this week?",n:"Shopfront, inside, coffee, toasties, cakes. Jay will send a short list.",o:["Yes","Not this week"]},
+{id:"site",t:"Greensborough website: $300 one-off, in the same style as Doreen. Do you want it?",n:"Same look as appretcafe.com.au, with its own menu, hours, map and order buttons.",o:["Yes please","Tell me more","Not now"]},
+{id:"more",t:"Anything else Jay should know about Greensborough?",o:[],txt:true}
+];
+var A={};
+try{A=JSON.parse(localStorage.getItem('appretgb')||'{}')}catch(e){}
+function save(){try{localStorage.setItem('appretgb',JSON.stringify(A))}catch(e){}}
+function render(){
+ var box=document.getElementById('qs');box.innerHTML='';
+ Q.forEach(function(q,i){
+  var d=document.createElement('div');d.className='q';
+  var b=document.createElement('b');b.textContent=(i+1)+'. '+q.t;d.appendChild(b);
+  if(q.n){var n=document.createElement('div');n.className='note';n.textContent=q.n;d.appendChild(n)}
+  if(q.o.length){
+   var w=document.createElement('div');w.className='opts';
+   q.o.forEach(function(o){
+    var bt=document.createElement('button');bt.textContent=o;
+    if(A[q.id+'_o']===o)bt.className='on';
+    bt.onclick=function(){A[q.id+'_o']=(A[q.id+'_o']===o?'':o);save();render()};
+    w.appendChild(bt);
+   });
+   d.appendChild(w);
+  }
+  if(q.txt){
+   var t=document.createElement('input');t.type='text';t.placeholder=q.o.length?'Type here if needed':'Type here';
+   t.value=A[q.id+'_t']||'';
+   t.oninput=function(){A[q.id+'_t']=t.value;save();count()};
+   d.appendChild(t);
+  }
+  box.appendChild(d);
+ });
+ count();
+}
+function ans(q){var o=A[q.id+'_o']||'',t=(A[q.id+'_t']||'').trim();return o&&t?o+' ('+t+')':(o||t)}
+function count(){
+ var n=0;Q.forEach(function(q){if(ans(q))n++});
+ document.getElementById('cnt').textContent=n+' of '+Q.length+' answered';
+}
+function msg(){
+ var out=['Appret Greensborough, Sunita\'s answers:'];
+ Q.forEach(function(q,i){var a=ans(q);out.push((i+1)+'. '+q.t+' '+(a||'(skipped)'))});
+ return out.join('\n');
+}
+document.getElementById('wa').onclick=function(){window.location.href='https://wa.me/?text='+encodeURIComponent(msg())};
+document.getElementById('cp').onclick=function(){var t=msg();try{navigator.clipboard.writeText(t).then(function(){alert('Copied. Paste it in WhatsApp to Jay.')},function(){prompt('Copy this:',t)})}catch(e){prompt('Copy this:',t)}};
+render();
+</script>
+</body></html>
