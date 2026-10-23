@@ -1,0 +1,313 @@
+<title>Set Up My Claude</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@100,800..900&family=Atkinson+Hyperlegible:wght@400;700&display=swap">
+<style>
+/* Layout: one question per screen, big type, warm accent. No clutter, skip anything. */
+:root {
+  --bg: #f4f5f2;
+  --surface: #ffffff;
+  --ink: #181a1f;
+  --muted: #5b606b;
+  --line: #d9dbd4;
+  --accent: #f2b705;
+  --accent-ink: #181a1f;
+  --btn: #181a1f;
+  --btn-ink: #ffffff;
+  --focus: #1a56db;
+  --display: "Archivo", "Arial Black", Arial, sans-serif;
+  --body: "Atkinson Hyperlegible", Verdana, Arial, sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #14161a; --surface: #1d2026; --ink: #f1f2ee; --muted: #a4a9b3; --line: #343841;
+    --accent: #f2b705; --accent-ink: #14161a; --btn: #f2b705; --btn-ink: #14161a; --focus: #7aa7ff;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #14161a; --surface: #1d2026; --ink: #f1f2ee; --muted: #a4a9b3; --line: #343841;
+  --accent: #f2b705; --accent-ink: #14161a; --btn: #f2b705; --btn-ink: #14161a; --focus: #7aa7ff;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--ink); font-family: var(--body); font-size: 18px; line-height: 1.5; margin: 0; padding-inline: 16px; padding-block: 20px 56px; }
+main { max-width: 640px; margin-inline: auto; }
+.top { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-block-end: 20px; min-height: 28px; }
+.brand { font-family: var(--display); font-weight: 900; font-stretch: 100%; letter-spacing: .04em; text-transform: uppercase; font-size: 13px; color: var(--muted); }
+.bar { height: 8px; background: var(--line); border-radius: 4px; overflow: hidden; flex: 1; max-width: 240px; }
+.bar > i { display: block; height: 100%; width: 0; background: var(--accent); transition: width .25s ease; }
+.part { font-size: 14px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); margin: 0 0 8px; }
+h1, h2 { font-family: var(--display); font-weight: 900; line-height: 1.1; margin: 0 0 12px; text-wrap: balance; }
+h1 { font-size: clamp(32px, 8vw, 46px); }
+h2 { font-size: clamp(26px, 6.2vw, 34px); }
+.help { color: var(--muted); margin: 0 0 20px; font-size: 17px; }
+p { margin: 0 0 14px; }
+input[type=text], textarea {
+  width: 100%; font: inherit; color: var(--ink); background: var(--surface);
+  border: 2px solid var(--line); border-radius: 10px; padding: 14px 16px;
+}
+textarea { min-height: 150px; resize: vertical; }
+input[type=text]:focus, textarea:focus, button:focus-visible, label.opt:has(input:focus-visible) { outline: 3px solid var(--focus); outline-offset: 2px; }
+.opts { display: flex; flex-wrap: wrap; gap: 10px; margin-block-end: 16px; }
+label.opt { display: flex; align-items: center; gap: 10px; cursor: pointer; background: var(--surface); border: 2px solid var(--line); border-radius: 10px; padding: 12px 14px; min-height: 52px; }
+label.opt input { width: 22px; height: 22px; accent-color: var(--ink); flex: none; margin: 0; }
+label.opt:has(input:checked) { border-color: var(--ink); background: color-mix(in srgb, var(--accent) 28%, var(--surface)); }
+.opts.col label.opt { width: 100%; }
+.small { font-size: 15px; color: var(--muted); }
+.nav { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; margin-block-start: 24px; }
+button { font: inherit; font-weight: 700; cursor: pointer; border-radius: 10px; padding: 14px 24px; min-height: 52px; border: 2px solid var(--btn); }
+.primary { background: var(--btn); color: var(--btn-ink); }
+.ghost { background: transparent; color: var(--ink); border-color: var(--line); }
+.link { background: none; border: 0; color: var(--muted); text-decoration: underline; padding: 14px 6px; min-height: 52px; }
+.out { font-family: ui-monospace, Consolas, monospace; font-size: 14px; line-height: 1.5; min-height: 340px; }
+ol.steps { padding-left: 22px; margin: 0 0 18px; }
+ol.steps li { margin-block-end: 8px; }
+.note { background: var(--surface); border: 2px solid var(--line); border-radius: 10px; padding: 14px 16px; margin-block-end: 18px; }
+.toast { color: var(--muted); font-size: 15px; min-height: 22px; margin-block-start: 8px; }
+</style>
+
+<main>
+  <div class="top">
+    <span class="brand" id="brand"></span>
+    <div class="bar" id="barWrap" hidden><i id="bar"></i></div>
+  </div>
+  <div id="screen"></div>
+</main>
+
+<script>
+(function () {
+  // ===== EDIT THIS BLOCK FOR EACH CLIENT =====
+  var CONFIG = {
+    clientName: "Tony",
+    key: "setup-tony-ptp-v1",
+    projectName: "Property, Paddock + Paw",
+    makesFiles: true,
+    extra: []
+  };
+  // ===== END EDIT BLOCK =====
+  var KEY = CONFIG.key;
+  document.getElementById("brand").innerHTML = CONFIG.clientName + " &middot; Claude set-up";
+  document.title = "Set up my Claude";
+
+  // ---------- the questions ----------
+  var CHORES = ["Writing emails and replies", "Writing documents and reports", "Invoices and payments", "Booking and diary", "Social media posts", "Research", "Tax, ABN and paperwork", "Sorting files and Drive", "Planning my week", "Home and family stuff"];
+  var STYLE = ["Short and simple", "Step by step", "Plain words, no jargon", "Do it, then tell me after", "Ask me first", "A bit of humour is fine"];
+  var TOOLS = ["Gmail", "Outlook", "Google Calendar", "Google Drive", "OneDrive", "Word or Docs", "Excel or Sheets", "Facebook", "Xero or MYOB", "Phone notes", "Paper and a notebook"];
+  var RULES = ["Never send anything to anyone without asking me first", "Never spend money or buy anything", "Never delete anything", "Always tell me what you changed, in one short list", "If you are not sure, ask me instead of guessing", "Keep private details private, never put them in anything public"];
+
+  var ANIMALS = ["Horses", "Dogs", "Cats", "Chickens and poultry", "Sheep, cattle, goats", "Birds", "Other pets"];
+  var FIRST = ["Facebook posts for my page", "Invoices", "Replies to enquiries", "Care sheets for each animal", "Updates to owners while they are away", "Keeping track of comments on my page"];
+  var STEPS = [
+    { id: "areas", part: "Your area", q: "Which suburbs and areas do you service?", help: "List every one. Claude will say no to anything outside this list.", type: "area", ph: "" },
+    { id: "animals", part: "Your work", q: "Which animals will you take on?", help: "Tick all that apply.", type: "multi", opts: ANIMALS, other: true },
+    { id: "wont", part: "Your work", q: "Anything you will NOT do?", help: "Injections, stallions, overnight stays, anything. Claude will turn these jobs down for you.", type: "area", ph: "" },
+    { id: "rates", part: "Money", q: "How do you charge?", help: "Per visit, per day, per animal, minimum fee. Your numbers, in your words.", type: "area", ph: "" },
+    { id: "gst", part: "Money", q: "Are you registered for GST?", help: "Pick one. Not sure is fine.", type: "single", opts: ["Yes", "No", "Not sure"] },
+    { id: "first", part: "Your first jobs", q: "What should Claude help with first?", help: "Tick the ones you want in the first month.", type: "multi", opts: FIRST, other: true },
+    { id: "posts", part: "Your voice", q: "Paste 3 of your best Facebook posts.", help: "Copy them from your page and paste them here. Claude will learn to write like you.", type: "area", ph: "" },
+    { id: "style", part: "How to talk to you", q: "How do you like to be talked to?", help: "Tick the ones that sound right.", type: "multi", opts: STYLE },
+    { id: "rules", part: "Safety rules", q: "Your safety rules for Claude", help: "These are ticked for you. Untick any you do not want.", type: "multi", opts: RULES, defaults: RULES.slice(), noOther: true }
+  ];
+  var N = STEPS.length;
+
+  // ---------- state ----------
+  var state = { i: -1, a: {} };       // i: -1 welcome, 0..N-1 questions, N review
+  try { var s = JSON.parse(localStorage.getItem(KEY) || "null"); if (s && s.a) state = s; } catch (e) {}
+  function save() { try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) {} }
+
+  var screen = document.getElementById("screen");
+  var bar = document.getElementById("bar");
+  var barWrap = document.getElementById("barWrap");
+
+  function el(tag, attrs, kids) {
+    var n = document.createElement(tag);
+    Object.keys(attrs || {}).forEach(function (k) {
+      if (k === "class") n.className = attrs[k];
+      else if (k === "text") n.textContent = attrs[k];
+      else if (k.slice(0, 2) === "on") n.addEventListener(k.slice(2), attrs[k]);
+      else n.setAttribute(k, attrs[k]);
+    });
+    (kids || []).forEach(function (c) { if (c) n.appendChild(c); });
+    return n;
+  }
+  function val(id) { var v = state.a[id]; return v === undefined ? "" : v; }
+  function arr(id) { var v = state.a[id]; return Array.isArray(v) ? v : []; }
+  function go(i) { state.i = i; save(); render(); window.scrollTo(0, 0); }
+
+  // ---------- screens ----------
+  function render() {
+    screen.textContent = "";
+    barWrap.hidden = !(state.i >= 0 && state.i < N);
+    if (state.i >= 0 && state.i < N) bar.style.width = Math.round((state.i / N) * 100) + "%";
+    if (state.i < 0) return welcome();
+    if (state.i >= N) return review();
+    question(STEPS[state.i]);
+  }
+
+  function welcome() {
+    var started = Object.keys(state.a).length > 0;
+    screen.appendChild(el("h1", { text: "Let's set up your Claude." }));
+    screen.appendChild(el("p", { text: "I already know your business, so there are only 9 questions. About 5 minutes." }));
+    screen.appendChild(el("p", { class: "help", text: "At the end you get one block of text. Paste it into Claude once. After that, Claude knows Property, Paddock + Paw, your area, your rates and what to do first." }));
+    var nav = el("div", { class: "nav" });
+    nav.appendChild(el("button", { class: "primary", text: started ? "Carry on where I was" : "Start", onclick: function () { go(started ? Math.min(Math.max(state.resume || 0, 0), N) : 0); } }));
+    if (started) nav.appendChild(el("button", { class: "link", text: "Start again", onclick: function () { state = { i: 0, a: {} }; save(); render(); } }));
+    screen.appendChild(nav);
+  }
+
+  function question(s) {
+    state.resume = state.i; save();
+    screen.appendChild(el("p", { class: "part", text: s.part + "  ·  " + (state.i + 1) + " of " + N }));
+    screen.appendChild(el("h2", { text: s.q }));
+    if (s.help) screen.appendChild(el("p", { class: "help", text: s.help }));
+    var first;
+
+    if (s.type === "text" || s.type === "area") {
+      var f = s.type === "text" ? el("input", { type: "text", id: "f-" + s.id, placeholder: s.ph || "", autocomplete: "off" }) : el("textarea", { id: "f-" + s.id, placeholder: s.ph || "" });
+      f.value = val(s.id);
+      f.addEventListener("input", function () { state.a[s.id] = f.value; save(); });
+      screen.appendChild(f); first = f;
+    } else {
+      var picked = state.a[s.id] === undefined ? (s.defaults || []) : arr(s.id);
+      if (s.type === "single") picked = typeof state.a[s.id] === "string" ? [state.a[s.id]] : [];
+      if (state.a[s.id] === undefined && s.defaults) { state.a[s.id] = s.defaults.slice(); save(); }
+      var wrap = el("div", { class: "opts" + (s.type === "single" || s.opts[0].length > 34 ? " col" : "") });
+      s.opts.forEach(function (o, k) {
+        var inp = el("input", { type: s.type === "single" ? "radio" : "checkbox", name: "g-" + s.id, id: "o-" + s.id + "-" + k });
+        inp.checked = picked.indexOf(o) > -1;
+        inp.addEventListener("change", function () {
+          if (s.type === "single") { state.a[s.id] = o; }
+          else {
+            var cur = arr(s.id).slice(), at = cur.indexOf(o);
+            if (inp.checked && at < 0) cur.push(o);
+            if (!inp.checked && at > -1) cur.splice(at, 1);
+            state.a[s.id] = cur;
+          }
+          save();
+        });
+        wrap.appendChild(el("label", { class: "opt", for: inp.id }, [inp, el("span", { text: o })]));
+        if (!first) first = inp;
+      });
+      screen.appendChild(wrap);
+      if (s.other) {
+        var oid = s.id + "_other";
+        var other = el("input", { type: "text", id: "f-" + oid, placeholder: "Anything else? Type it here.", autocomplete: "off" });
+        other.value = val(oid);
+        other.addEventListener("input", function () { state.a[oid] = other.value; save(); });
+        screen.appendChild(other);
+      }
+    }
+
+    var nav = el("div", { class: "nav" });
+    nav.appendChild(el("button", { class: "primary", text: state.i === N - 1 ? "Finish" : "Next", onclick: function () { go(state.i + 1); } }));
+    if (state.i > 0) nav.appendChild(el("button", { class: "ghost", text: "Back", onclick: function () { go(state.i - 1); } }));
+    if (s.type !== "multi" || !s.defaults) nav.appendChild(el("button", { class: "link", text: "Skip", onclick: function () { go(state.i + 1); } }));
+    screen.appendChild(nav);
+    if (first && window.innerWidth > 700) { try { first.focus({ preventScroll: true }); } catch (e) {} }
+  }
+
+  // ---------- the paste block ----------
+  function list(id) {
+    var items = arr(id).slice();
+    var x = (val(id + "_other") || "").trim();
+    if (x) items.push(x);
+    return items;
+  }
+  function bullets(items) { return items.map(function (t) { return "- " + t; }).join("\n"); }
+  function has(id) { return !!(val(id) || "").trim(); }
+
+  function build() {
+    var o = [];
+    o.push("Please set up my workspace. Below are four files about me and my business. Save each one as its own .md file with the name shown, then keep following them. Then say hi to me in one short sentence and ask which first job we start with.");
+    o.push("");
+    o.push("=== FILE: about-me.md ===");
+    o.push("# About Tony");
+    o.push("Business: Property, Paddock + Paw. Tagline: Short-term care, long-lasting trust.");
+    o.push("What I do: I look after horses, stables, paddocks and pets while property owners go away. I am retired and run this myself.");
+    o.push("Based in: Yarrambat, Victoria.");
+    o.push("Contact: ppandpaw@outlook.com, 0417 037 647. ABN on my public posts: 59 150 910 272 (check it is right).");
+    o.push("Facebook page: https://www.facebook.com/profile.php?id=61591565173941");
+    o.push("I post in local community groups (Kilmore, Yarra Glen, Kangaroo Ground). I have no website and do not want one.");
+    o.push("Jay Boyle (JAB Enterprise) is helping me set this up in paid hourly sessions. Jay invoices me. Jay's invoices are a business cost, keep a record.");
+    o.push("");
+    o.push("Areas I service. ONLY these:");
+    o.push(has("areas") ? val("areas").trim() : "- Not given yet. Ask me before quoting any job.");
+    o.push("");
+    o.push("Animals I take on:");
+    var an = list("animals");
+    o.push(an.length ? bullets(an) : "- Ask me.");
+    if (has("wont")) o.push("\nJobs I will NOT do:\n" + val("wont").trim());
+    o.push("");
+    o.push("How I charge: " + (has("rates") ? val("rates").trim() : "not given yet, ask me."));
+    o.push("GST registered: " + (val("gst") || "not sure") + ".");
+
+    o.push("");
+    o.push("=== FILE: how-to-help-me.md ===");
+    o.push("# How to help Tony");
+    o.push("You are the assistant for Property, Paddock + Paw. Take the admin off my plate so I can spend my time with the animals.");
+    var f = list("first");
+    o.push("\nStart with these, one at a time:");
+    o.push(f.length ? bullets(f) : "- Ask me which first.");
+    if (has("posts")) o.push("\nMy voice. Write like these posts of mine:\n" + val("posts").trim());
+    o.push("\nHow to talk to me:");
+    var st = arr("style");
+    o.push(st.length ? bullets(st) : "- Short and simple.");
+    o.push("");
+    o.push("=== FILE: rules.md ===");
+    o.push("# Rules for Claude");
+    o.push("- Only quote or book jobs inside my service areas. Outside them, politely say no.");
+    o.push("- Never put owner names, addresses or animal details in a public post.");
+    o.push(arr("rules").length ? bullets(arr("rules")) : "- Ask before doing anything that cannot be undone.");
+    o.push("");
+    o.push("=== FILE: build-list.md ===");
+    o.push("# Build list. Work top to bottom, one at a time, ask me before each step.");
+    o.push("1. Content: weekly Facebook post ideas from my real jobs. I paste and post them myself.");
+    o.push("2. Invoicing: template with my ABN, plus a record per job (owner, animals, dates, visits, price).");
+    o.push("3. Enquiry reply template that checks the suburb first. Care sheet per animal. Daily update to the owner.");
+    o.push("4. Facebook comment tracking, LAST. Check what Meta Business Suite already does before building anything. Test on a practice page first. Replies stay drafts until I say yes.");
+    o.push("5. Agents: only build what I actually use after two weeks.");
+    o.push("");
+    o.push("=== END OF FILES ===");
+    return o.join("\n");
+  }
+
+  // ---------- copy goes to Jay too ----------
+  var BACKEND = "https://script.google.com/macros/s/AKfycbxuEdyBwmjR1fRBpvDwigwvai-ub3XJrRkrv1jLCVQQqd0v6tK08c0gfbeTh9tkRp0g/exec";   // Apps Script /exec URL, see backend/SETUP-STEPS.md
+  function sendToJay(block, kind) {
+    if (!BACKEND) return;
+    var body = JSON.stringify({ key: KEY, kind: kind, answers: state.a, block: block, at: new Date().toISOString() });
+    try { if (navigator.sendBeacon && navigator.sendBeacon(BACKEND, new Blob([body], { type: "text/plain;charset=UTF-8" }))) return; } catch (e) {}
+    try { fetch(BACKEND, { method: "POST", mode: "no-cors", headers: { "Content-Type": "text/plain;charset=UTF-8" }, body: body, keepalive: true }); } catch (e) {}
+  }
+
+  function review() {
+    barWrap.hidden = true;
+    var text = build();
+    sendToJay(text, "finished");
+    screen.appendChild(el("p", { class: "part", text: "All done" }));
+    screen.appendChild(el("h2", { text: "Your Claude block is ready." }));
+    screen.appendChild(el("p", { class: "help", text: "Read it. Fix anything that is wrong right in the box. Then copy it. A copy of your answers also goes to Jay so he can get your next step ready." }));
+    var ta = el("textarea", { class: "out", id: "out", "aria-label": "Your Claude block" });
+    ta.value = text;
+    screen.appendChild(ta);
+    var toast = el("div", { class: "toast", role: "status" });
+    var nav = el("div", { class: "nav" });
+    nav.appendChild(el("button", { class: "primary", text: "Copy it", onclick: function () {
+      function fallback() { ta.focus(); ta.select(); toast.textContent = "Selected. Press Ctrl+C (or hold and tap Copy) to copy it."; }
+      sendToJay(ta.value, "copied");
+      try { navigator.clipboard.writeText(ta.value).then(function () { toast.textContent = "Copied."; }, fallback); } catch (e) { fallback(); }
+    } }));
+    nav.appendChild(el("button", { class: "ghost", text: "Back to questions", onclick: function () { go(N - 1); } }));
+    screen.appendChild(nav);
+    screen.appendChild(toast);
+
+    screen.appendChild(el("h2", { text: "Now paste it into Claude" }));
+    var steps = el("ol", { class: "steps" });
+    (CONFIG.makesFiles ? ["Open Claude and start a new chat.", "Paste the block you copied.", "Press send.", "Claude saves your files and says hi."] : ["Go to claude.ai and sign in.", "Tap Projects, then New project.", "Name it " + CONFIG.projectName + ".", "Find Project instructions (the button can say Set project instructions).", "Paste the block you copied and save.", "Start a chat inside that project. Say hi.", "Use that project every time. Claude remembers you there."]).forEach(function (t) { steps.appendChild(el("li", { text: t })); });
+    screen.appendChild(steps);
+    screen.appendChild(el("div", { class: "note small", text: "Button names change now and then. If something looks different, ask Jay." }));
+  }
+
+  render();
+})();
+</script>
